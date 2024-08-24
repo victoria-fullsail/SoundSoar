@@ -73,7 +73,23 @@
                                     <i class="fa-solid fa-user"></i>
                                     <a href="{% url 'userpref:preferences' %}">Account Settings</a>
                                 </div>
-                            </div>                      
+                                <!-- LOGOUT BUTTON -->
+                                    {% if user.is_authenticated %}
+                                    <!-- Sign-out button for logged-in users -->
+                                    <li>
+                                        <a href="{% url 'core:custom_logout' %}" style="background-color: #0077b6; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.3s ease;">
+                                            Sign Out
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <!-- Sign-in button for guests -->
+                                    <li>
+                                        <a href="{% url 'trending:trending' %}" style="background-color: #0077b6; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.3s ease;">
+                                            Sign In
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                            </div>           
                         </div>
                     </div>
                 </div>
