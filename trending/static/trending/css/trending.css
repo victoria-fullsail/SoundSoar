@@ -1,0 +1,77 @@
+/* Container for the page content */
+.container {
+    padding: 20px;
+}
+
+/* Styling for the form */
+.filter-form {
+    margin-bottom: 20px;
+}
+
+.filter-form .btn-submit {
+    background-color: #0077b6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.filter-form .btn-submit:hover {
+    background-color: #005f8c;
+}
+
+/* Wrapper for table and graphics */
+.content-wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Styling for the table */
+.table-container {
+    flex: 2;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+table th {
+    background-color: #0077b6;
+    color: white;
+}
+
+table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+table tr:hover {
+    background-color: #ddd;
+}
+
+/* Styling for the graphics section */
+.graphics-container {
+    flex: 1;
+    margin-left: 20px;
+}
+
+.graphics-container h2 {
+    margin-top: 0;
+}
+
+.placeholder {
+    background-color: #f2f2f2;
+    border: 1px solid #ddd;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #0077b6;
+}

@@ -2,6 +2,43 @@
 {% load static %}
 {% block content %}
 
-<h1>trending page</h1>
+<h1>Trending Page</h1>
+
+<div class="container">
+    <form method="get" class="filter-form">
+        {{ form.as_p }}
+        <button type="submit" class="btn-submit">Filter</button>
+    </form>
+
+    <div class="content-wrapper">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        {% for header in headers %}
+                            <th>{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                        <tr>
+                            {% for value in row %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="graphics-container">
+            <h2>Visual Graphics</h2>
+            <!-- Placeholder for graphics -->
+            <div class="placeholder">Graphics will go here</div>
+        </div>
+    </div>
+    
+</div>
 
 {% endblock content %}
