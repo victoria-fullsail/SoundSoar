@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls', namespace="core")),
     path('trending/', include('trending.urls', namespace="trending")),
-    path('analysis/', include('analysis.urls', namespace="analysis")),
+    path('popularity/', include('popularity.urls', namespace="popularity")),
     path('personalized/', include('personalized.urls', namespace="personalized")),
     path('user/preferences/', include('userpref.urls', namespace="userpref")),
 ]

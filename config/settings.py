@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core.apps.CoreConfig',
     'trending.apps.TrendingConfig',
-    'analysis.apps.AnalysisConfig',
+    'popularity.apps.PopularityConfig',
     'personalized.apps.PersonalizedConfig', 
     'userpref.apps.UserprefConfig',
 ]
