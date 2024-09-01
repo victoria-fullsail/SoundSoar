@@ -2,11 +2,36 @@
 {% load static %}
 {% block content %}
 
-<h1>Trending Page</h1>
+<h1>Charts</h1>
 
-<div class="container">
-coming soon
-    
-</div>
+{% if charts %}
+    {% for chart in charts %}
+        <h2>{{ chart.name }} ({{ chart.get_chart_type_display }})</h2>
+        <p>{{ chart.description }}</p>
+        <p>Created at: {{ chart.created_at }}</p>
+
+        <h3>Playlists</h3>
+        <ul>
+        {% for playlist in chart.playlists.all %}
+            <li>
+                <h4>{{ playlist.name }}</h4>
+                <p>{{ playlist.description }}</p>
+                <p>Created at: {{ playlist.created_at }}</p>
+
+                <h5>Tracks</h5>
+                <ul>
+                {% for playlist_track in playlist.playlist_tracks.all %}
+                    <li>
+                        {{ playlist_track.track.name }} by {{ playlist_track.track.artist }}
+                    </li>
+                {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+{% else %}
+    <p>No charts found for the selected criteria.</p>
+{% endif %}
 
 {% endblock content %}
