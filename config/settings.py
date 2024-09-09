@@ -2,12 +2,12 @@ import os
 from pathlib import Path
 from decouple import config
 
-
+# BASIC SETTINGS
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+SITE_ID = 1
+
 
 # SERVER SETTINGS
 ALLOWED_HOSTS = ['localhost', '3.130.223.246', 'soundsoar.com', 'www.soundsoar.com']
@@ -17,7 +17,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -26,6 +25,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.spotify',
     'core.apps.CoreConfig',
     'trending.apps.TrendingConfig',
     'popularity.apps.PopularityConfig',
@@ -41,7 +45,14 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
 
 ROOT_URLCONF = 'config.urls'
 
@@ -65,7 +76,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 # Database
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -79,8 +89,6 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -98,14 +106,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+TIME_ZONE = 'Pacific/Easter'
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -113,18 +116,89 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # Directory where collectstatic will collect static files for production
 
+# AWS S3 settings for public media files
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
 
-# MEDIA FILES (user uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # Directory where uploaded files will be stored
+# Media files (uploads by users)
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+MEDIA_ROOT = ''  # This can be left empty
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Jazzmin Settings
+# SPOTIPY
+SPOTIPY_CLIENT_ID = config('SPOTIPY_CLIENT_ID')
+SPOTIPY_CLIENT_SECRET = config('SPOTIPY_CLIENT_SECRET')
+SPOTIPY_REDIRECT_URI = config('SPOTIPY_REDIRECT_URI')
 
+# SPOTIFY SSO
+SOCIALACCOUNT_PROVIDERS = {
+    'spotify': {
+        'AUTH_PARAMS': {
+            'scope': 'user-read-email'
+        },
+        'SCOPE': [
+            'user-read-email',
+            'user-read-private',
+            'playlist-read-private',
+            'playlist-read-collaborative',
+            'user-library-read',
+        ],
+        'CLIENT_ID': SPOTIPY_CLIENT_ID,
+        'SECRET': SPOTIPY_CLIENT_SECRET,
+        'REDIRECT_URI': SPOTIPY_REDIRECT_URI,
+    }
+}
+
+SPOTIFY_LOG_FILE_PATH = os.path.join(BASE_DIR, 'logs', 'spotify.log')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',  # Changed to DEBUG to see all messages in console
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': SPOTIFY_LOG_FILE_PATH,
+            'maxBytes': 5 * 1024 * 1024,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'spotify': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
+
+# Jazzmin Settings
 JAZZMIN_SETTINGS = {
     'site_title': 'SoundSoar',
     'site_header': 'SoundSoar',
@@ -139,8 +213,8 @@ JAZZMIN_SETTINGS = {
     ############
 
     "topmenu_links": [
-        {"name": "Home", "url": "admin:index"},
-        {"app": "auth"},  # Keep only necessary apps
+    {"name": "Home", "url": "admin:index"},
+    {"app": "sites"},  # Add the sites app to the top menu
     ],
 
     #############

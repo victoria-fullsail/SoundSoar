@@ -5,6 +5,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),
     path('', include('core.urls', namespace="core")),
     path('trending/', include('trending.urls', namespace="trending")),
     path('popularity/', include('popularity.urls', namespace="popularity")),
@@ -12,10 +13,9 @@ urlpatterns = [
     path('user/preferences/', include('userpref.urls', namespace="userpref")),
 ]
 
-admin.site.site_header = "SoundSoar"
-admin.site.site_title = "SoundSoar"
+admin.site.site_header = "SoundSoarAdmin"
+admin.site.site_title = "SoundSoarAdmin"
 admin.site.index_title = "Welcome to Sound Soar!"
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

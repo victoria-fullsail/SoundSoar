@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models import Chart, Playlist, Track, PlaylistTrack, StreamHistory, TrackFeatures
+from .models import Chart, Playlist, Track, PlaylistTrack, PopularityHistory, TrackFeatures
 
 admin.site.register(Chart)
 admin.site.register(Playlist)
 admin.site.register(Track)
 admin.site.register(PlaylistTrack)
-admin.site.register(StreamHistory)
+admin.site.register(PopularityHistory)
 admin.site.register(TrackFeatures)
