@@ -4,12 +4,12 @@ import logging
 from decouple import config, Config, RepositoryEnv
 import os
 
-# Get the Spotify logger
 logger = logging.getLogger('spotify')
 
-# Setup Spotify authentication and API client
+
 def get_spotify_client():
     """Authenticate with Spotify using client credentials."""
+
     # Get the directory of the current script and then it's parent
     script_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(script_dir)
@@ -24,17 +24,18 @@ def get_spotify_client():
     SPOTIPY_CLIENT_ID = env_config('SPOTIPY_CLIENT_ID')
     SPOTIPY_CLIENT_SECRET = env_config('SPOTIPY_CLIENT_SECRET')
 
-    logger.info('Initializing Spotify client.')
+    logger.debug('Initializing Spotify client.')
     sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
         client_id=SPOTIPY_CLIENT_ID,
         client_secret=SPOTIPY_CLIENT_SECRET
     ))
     return sp
 
-# Fetch tracks from a specific playlist
+
 def fetch_playlist_tracks(playlist_id):
     """Fetch all tracks from a Spotify playlist."""
-    logger.info(f'Fetching tracks for playlist ID: {playlist_id}')
+
+    logger.debug(f'Fetching tracks for playlist ID: {playlist_id}')
     sp = get_spotify_client()
     track_items = []
     
@@ -48,7 +49,7 @@ def fetch_playlist_tracks(playlist_id):
     
     return track_items
 
-# Get track's audio features and other info
+
 def fetch_track_details(track_id):
     """Fetch audio features and additional details for a specific track."""
     sp = get_spotify_client()
@@ -61,7 +62,7 @@ def fetch_track_details(track_id):
         'track_info': track_info
     }
 
-# Fetch detailed track info for each track in a playlist
+
 def fetch_playlist_with_details(playlist_id):
     """Fetch all tracks and their details (audio features, popularity) from a playlist."""
     track_items = fetch_playlist_tracks(playlist_id)

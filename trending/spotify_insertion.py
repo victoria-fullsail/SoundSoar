@@ -2,17 +2,15 @@ from trending.models import Track, TrackFeatures, PopularityHistory
 from django.utils import timezone
 import logging
 
-# Get the Spotify logger
 logger = logging.getLogger('spotify')
 
 
 def insert_or_update_track(track_data):
-    """Insert a new track or update an existing one based on Spotify data."""
-    logger.debug(f'Inserting or updating track: {track_data["spotify_id"]}')
+    """Insert or update a track record in the database."""
+    logger.info(f'Inserting or updating track: {track_data["spotify_id"]}')
     track_id = track_data['spotify_id']
     
-    # Create or update the Track record
-    track, created = Track.objects.update_or_create(
+    track_obj, created = Track.objects.update_or_create(
         spotify_id=track_id,
         defaults={
             'name': track_data['name'],
@@ -36,10 +34,43 @@ def insert_or_update_track(track_data):
     else:
         logger.info(f'Updated existing track: {track_id}')
     
-    return track
+    return track_obj
 
 
-def insert_or_update_popularity_history(track):
+def update_playlist_tracks(playlist, track_data):
+    """
+    Updates the playlist's tracks with a new list of tracks,
+    clearing out any previous tracks.
+
+    Args:
+        playlist (Playlist): The playlist to update.
+        track_data (list of dict): The list of detailed track data from Spotify API.
+    """
+    track_ids = []
+
+    for track in track_data:
+        spotify_id = track.get('spotify_id')
+
+        if not spotify_id:
+            continue  # Skip if the track is invalid or local (no Spotify ID)
+
+        # Update or create the track
+        track_obj = insert_or_update_track(track)
+
+        # Insert or update track features
+        insert_or_update_track_features(track_obj, track.get('audio_features', {}))
+
+        # Insert popularity history
+        insert_popularity_history(track_obj)
+
+        track_ids.append(track_obj.id)
+
+    # Replace the playlist's tracks with the new track list
+    playlist.tracks.set(track_ids)
+    playlist.save()
+
+
+def insert_popularity_history(track):
     """Insert a new record into PopularityHistory."""
     logger.debug(f'Inserting popularity history for track: {track.spotify_id}')
     PopularityHistory.objects.create(
@@ -51,21 +82,21 @@ def insert_or_update_popularity_history(track):
 
 def insert_or_update_track_features(track, audio_features):
     """Insert or update the TrackFeatures record for the given track."""
-    logger.debug(f'Inserting or updating track features for track: {track.spotify_id}')
+    logger.info(f'Inserting or updating track features for track: {track.spotify_id}')
 
     track_features, created = TrackFeatures.objects.update_or_create(
         track=track,
         defaults={
-            'danceability': audio_features.get('danceability', None),
+            'valence': audio_features.get('valence', None),
             'energy': audio_features.get('energy', None),
             'tempo': audio_features.get('tempo', None),
+            'danceability': audio_features.get('danceability', None),
+            'speechiness': audio_features.get('speechiness', None),
             'current_popularity': track.popularity,
             'trend': 'stable',
-            'retrieval_frequency': 'low'
         }
     )
 
-    # Update features with calculations
     track_features.update_features()
 
     if created:
@@ -74,25 +105,3 @@ def insert_or_update_track_features(track, audio_features):
         logger.info(f'Updated existing track features for: {track.spotify_id}')
 
     return created
-
-
-def process_and_insert_data(detailed_tracks):
-    """Process and insert/update all tracks and their details into the database."""
-    logger.info('Processing and inserting track data.')
-
-    for track_data in detailed_tracks:
-        try:
-            # Extract audio features
-            audio_features = track_data['audio_features']
-            
-            # Insert or update the Track record
-            track = insert_or_update_track(track_data)
-
-            # Insert or update the PopularityHistory record
-            insert_or_update_popularity_history(track)
-            
-            # Insert or update the TrackFeatures record
-            insert_or_update_track_features(track, audio_features)
-        
-        except Exception as e:
-            logger.error(f'Error processing track data for {track_data["spotify_id"]}: {e}', exc_info=True)
