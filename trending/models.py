@@ -61,21 +61,12 @@ class PopularityHistory(models.Model):
 
 class TrackFeatures(models.Model):
     track = models.ForeignKey(Track, on_delete=models.CASCADE, related_name='features')
-
-    valence = models.FloatField(blank=True, null=True)
-    energy = models.FloatField(blank=True, null=True)
-    tempo = models.FloatField(blank=True, null=True)
-    danceability = models.FloatField(blank=True, null=True)
-    speechiness = models.FloatField(blank=True, null=True)
-
     current_popularity = models.IntegerField(blank=True, null=True)
-
     velocity = models.FloatField(blank=True, null=True)
     median_popularity = models.FloatField(blank=True, null=True)
     mean_popularity = models.FloatField(blank=True, null=True)
     std_popularity = models.FloatField(blank=True, null=True)
     trend = models.CharField(max_length=50, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
-
     retrieval_frequency = models.CharField(max_length=50, blank=True, null=True, choices=[('high', 'High Frequency'), ('medium', 'Medium Frequency'), ('low', 'Low Frequency')], default='low')
     updated_at = models.DateTimeField(default=timezone.now)
 
@@ -164,34 +155,60 @@ class TrackFeatures(models.Model):
     def get_popularity_model_features_and_target():
         pass
 
-
-class ModelVersion(models.Model):
-    version_number = models.CharField(max_length=25, unique=True)
+class TrendModel(models.Model):
+    version_number = models.CharField(max_length=25, unique=True, blank=True)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Version {self.version_number} - {'Active' if self.is_active else 'Inactive'}"
-
-    def activate(self):
-        """Activate this version and deactivate all others."""
-        ModelVersion.objects.update(is_active=False)  # Deactivate all other versions
-        self.is_active = True
-        self.save()
-
-    def deactivate(self):
-        """Deactivate this version."""
-        self.is_active = False
-        self.save()
-
-class ModelPerformance(models.Model):
-    model_version = models.ForeignKey(ModelVersion, on_delete=models.CASCADE, related_name='performances')
+    model_type = models.CharField(max_length=25, choices=[
+        ('RandomForest', 'RandomForest'), 
+        ('GradientBoost', 'GradientBoost'), 
+        ('HistGradientBoost', 'HistGradientBoost')
+    ])
     accuracy = models.FloatField()
     precision = models.FloatField()
     recall = models.FloatField()
     f1_score = models.FloatField()
+    roc_auc = models.FloatField(null=True, blank=True)
     evaluation_date = models.DateTimeField(default=timezone.now)
 
+    def save(self, *args, **kwargs):
+        # Automatically generate a unique version number if not set
+        if not self.version_number:
+            last_model = TrendModel.objects.order_by('created_at').last()
+            if last_model and last_model.version_number:
+                last_version_num = int(last_model.version_number.split('.')[0][1:])
+                self.version_number = f'v{last_version_num + 1}.0'
+            else:
+                # If this is the first version, start with 'v1.0'
+                self.version_number = 'v1.0'
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Performance for {self.model_version.version_number} on {self.evaluation_date}"
+        return f"Version {self.version_number} - {self.model_type} ({'Active' if self.is_active else 'Inactive'})"
+
+    def activate(self):
+        """Activate this model and deactivate all others."""
+        TrendModel.objects.update(is_active=False)  # Deactivate all other versions
+        self.is_active = True
+        self.save()
+
+    def deactivate(self):
+        """Deactivate this model."""
+        self.is_active = False
+        self.save()
+
+class PredictionHistory(models.Model):
+    trend_model = models.ForeignKey(TrendModel, on_delete=models.CASCADE, related_name='predictions')
+    song = models.ForeignKey(Track, on_delete=models.CASCADE, related_name='trend_predictions')
+    predicted_trend = models.CharField(max_length=50, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    actual_trend = models.CharField(max_length=50, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')], blank=True, null=True)
+    predicted_at = models.DateTimeField(default=timezone.now)
+    actualized_at = models.DateTimeField(blank=True, null=True)
+    
+    def is_correct(self):
+        """Check if the prediction was correct"""
+        return self.predicted_trend == self.actual_trend
+
+    def __str__(self):
+        return f"Prediction for {self.song.name}: {self.predicted_trend} (Actual: {self.actual_trend if self.actual_trend else 'Pending'})"

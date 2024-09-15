@@ -87,11 +87,6 @@ def insert_or_update_track_features(track, audio_features):
     track_features, created = TrackFeatures.objects.update_or_create(
         track=track,
         defaults={
-            'valence': audio_features.get('valence', None),
-            'energy': audio_features.get('energy', None),
-            'tempo': audio_features.get('tempo', None),
-            'danceability': audio_features.get('danceability', None),
-            'speechiness': audio_features.get('speechiness', None),
             'current_popularity': track.popularity,
             'trend': 'stable',
         }
