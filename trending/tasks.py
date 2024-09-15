@@ -2,7 +2,7 @@ import os
 import sys
 import django
 import logging
-from celery import Celery
+import argparse
 
 # Set up the project base directory and Django settings module
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,8 +17,9 @@ from spotify_api import fetch_playlist_with_details, fetch_track_details
 from spotify_insertion import update_playlist_tracks, insert_or_update_track, insert_or_update_track_features, insert_popularity_history
 
 
-# Task: Sync playlist tracks every 24 hours
 def sync_playlist_tracks_task():
+    """Sync playlist tracks every 24 hours."""
+
     playlists = Playlist.objects.all()
 
     for playlist in playlists:
@@ -34,11 +35,8 @@ def sync_playlist_tracks_task():
             logger.error(f'Error processing playlist {playlist.playlist_id}: {e}')
 
 
-
-
-# Task: High-frequency sync for certain tracks every 6 hours
 def high_freq_sync_track_data_task():
-
+    """High-frequency sync for certain tracks every 6 hours"""
     # Fetch high-frequency track features from the database
     high_freq_tracks = TrackFeatures.objects.filter(retrieval_frequency='high')
 
@@ -60,8 +58,8 @@ def high_freq_sync_track_data_task():
     logger.info("High-frequency track data synchronization completed.")
 
 
-# Task: Medium-frequency sync for certain tracks every 12 hours
 def medium_freq_sync_track_data_task():
+    """Medium-frequency sync for certain tracks every 12 hours"""
 
     # Fetch medium-frequency track features from the database
     medium_freq_tracks = TrackFeatures.objects.filter(retrieval_frequency='medium')
@@ -83,15 +81,17 @@ def medium_freq_sync_track_data_task():
 
     logger.info("Medium-frequency track data synchronization completed.")
 
+def main():
+    parser = argparse.ArgumentParser(description="Run specific functions.")
+    parser.add_argument('function', choices=['sync_playlist', 'high_freq', 'medium_freq'], help="Function to run")
+    args = parser.parse_args()
+
+    if args.function == 'sync_playlist':
+        sync_playlist_tracks_task()
+    elif args.function == 'high_freq':
+        high_freq_sync_track_data_task()
+    elif args.function == 'medium_freq':
+        medium_freq_sync_track_data_task()
 
 if __name__ == "__main__":
-
-    sync_playlist_tracks_task()
-
-    # Fetch all TrackFeatures instances
-    all_track_features = TrackFeatures.objects.all()
-
-    # Update all TrackFeatures
-    for track_feature in all_track_features:
-        track_feature.update_features()
-
+    main()
