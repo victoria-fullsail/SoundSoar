@@ -162,7 +162,6 @@ class TrendModel(models.Model):
     is_active = models.BooleanField(default=False)
     model_type = models.CharField(max_length=25, choices=[
         ('RandomForest', 'RandomForest'), 
-        ('GradientBoost', 'GradientBoost'), 
         ('HistGradientBoost', 'HistGradientBoost')
     ])
     accuracy = models.FloatField()
