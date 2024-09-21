@@ -3,23 +3,24 @@ import sys
 import django
 from trend_model import train_and_evaluate_models, save_model
 from trending.models import TrendModel
-import joblib
-
-# Set up Django environment
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(BASE_DIR)
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-django.setup()
 
 # Function to save a model with version number
-def save_model_with_version(model, version_number):
+def save_model_with_version(model, version_number, feature_names=None):
     model_file_path = f'trending/ml_models/{version_number}_model.pkl'
     save_model(model, model_file_path)
+
+    # Optionally save feature names
+    if feature_names:
+        with open(f'trending/ml_models/{version_number}_feature_names.txt', 'w') as f:
+            for feature in feature_names:
+                f.write(f"{feature}\n")
+
     return model_file_path
+
 
 # Function to update the active model in the database
 def update_active_model():
-    results, best_model = train_and_evaluate_models()
+    results, best_model, feature_names = train_and_evaluate_models()
     if not best_model:
         print("No best model found.")
         return
@@ -44,7 +45,7 @@ def update_active_model():
     new_version.activate()
 
     # Save the model with version number
-    model_file_path = save_model_with_version(best_model, new_version.version_number)
+    model_file_path = save_model_with_version(best_model, new_version.version_number, feature_names) 
     print(f"Model version {new_version.version_number} saved at {model_file_path}")
 
 if __name__ == '__main__':

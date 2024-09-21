@@ -2,6 +2,8 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 import numpy as np
+import pandas as pd
+from .use_trend_model import load_active_model 
 
 
 class Chart(models.Model):
@@ -66,9 +68,11 @@ class TrackFeatures(models.Model):
     median_popularity = models.FloatField(blank=True, null=True)
     mean_popularity = models.FloatField(blank=True, null=True)
     std_popularity = models.FloatField(blank=True, null=True)
-    trend = models.CharField(max_length=50, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    trend = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
     retrieval_frequency = models.CharField(max_length=50, blank=True, null=True, choices=[('high', 'High Frequency'), ('medium', 'Medium Frequency'), ('low', 'Low Frequency')], default='low')
     updated_at = models.DateTimeField(default=timezone.now)
+
+    predicted_trend = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
 
     def __str__(self):
         return f"Features for {self.track.name}"
@@ -133,6 +137,60 @@ class TrackFeatures(models.Model):
         self.updated_at = timezone.now()
         self.save()
     
+    def predict_and_update_trend(self):
+        """
+        Use the trained model to predict the trend and update the `predicted_trend` field.
+        """
+        # Query the active model from the database
+        active_model = TrendModel.objects.filter(is_active=True).first()
+
+        if not active_model:
+            raise ValueError("No active model found for trend prediction.")
+
+        # Load the model and its expected feature names
+        model, feature_names = load_active_model(active_model)
+
+        # Prepare the input features for prediction
+        retrieval_frequency_mapping = {'high': 2, 'medium': 1, 'low': 0}
+        retrieval_frequency = retrieval_frequency_mapping.get(self.retrieval_frequency, np.nan)
+
+        features = {
+            'track__valence': self.track.valence,
+            'track__tempo': self.track.tempo,
+            'track__speechiness': self.track.speechiness,
+            'track__danceability': self.track.danceability,
+            'track__liveness': self.track.liveness,
+            'velocity': self.velocity,
+            'current_popularity': self.current_popularity,
+            'median_popularity': self.median_popularity,
+            'mean_popularity': self.mean_popularity,
+            'std_popularity': self.std_popularity,
+            'retrieval_frequency': retrieval_frequency
+        }
+
+        features_df = pd.DataFrame([features])[feature_names]
+        features_df = features_df.replace({None: np.nan}).infer_objects(copy=False)
+
+        # Predict the trend
+        try:
+            prediction = model.predict(features_df)[0]
+            print("Prediction:", prediction)
+        except Exception as e:
+            print(f"Error during prediction: {e}")
+            return
+
+
+        # Update the `predicted_trend` field
+        if prediction == 1:
+            self.predicted_trend = 'up'
+        elif prediction == -1:
+            self.predicted_trend = 'down'
+        elif prediction == 0:
+            self.predicted_trend = 'stable'
+
+        self.save()
+
+
     def get_historical_popularity(self, days=30):
         """
         Retrieves historical popularity data for the last `days` days.

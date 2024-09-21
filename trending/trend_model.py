@@ -19,7 +19,11 @@ def train_and_evaluate_models():
     data = load_data(model_name='TrackFeatures')
     X = data[['track__valence', 'track__tempo', 'track__speechiness', 'track__danceability', 'track__liveness', 'velocity', 'current_popularity', 'median_popularity', 'mean_popularity', 'std_popularity', 'retrieval_frequency']]
     y = data['trend']
+    # Save feature names
+    feature_names = list(X.columns)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+
 
     models = {
         'RandomForest': RandomForestClassifier(),
@@ -66,16 +70,11 @@ def train_and_evaluate_models():
             best_accuracy = accuracy
             best_model = best_model_candidate
 
-    return results, best_model
+    return results, best_model, feature_names
 
 # Function to save a model to disk
 def save_model(model, file_path):
-    joblib.dump(model, file_path)
+    joblib.dump(model, file_path)  # Save both model and feature names
     print(f"Model saved to {file_path}")
 
-if __name__ == '__main__':
-    results, best_model = train_and_evaluate_models()
-    print("Results:", results)
-    if best_model:
-        model_file_path = os.path.join(BASE_DIR, 'trending/ml_models', 'best_model.pkl')
-        save_model(best_model, model_file_path)
+

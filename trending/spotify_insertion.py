@@ -93,6 +93,7 @@ def insert_or_update_track_features(track, audio_features):
     )
 
     track_features.update_features()
+    # track_features.predict_and_update_trend()
 
     if created:
         logger.info(f'Created new track features for: {track.spotify_id}')
