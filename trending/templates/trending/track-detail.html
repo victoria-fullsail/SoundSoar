@@ -1,0 +1,22 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>{{ track.name }}</h2>
+    <p><strong>Artist:</strong> {{ track.artist }}</p>
+    <p><strong>Album:</strong> {{ track.album }}</p>
+    <p><strong>Current Trend:</strong> {{ track.current_trend }}</p>
+    <p><strong>Description:</strong> {{ track.description }}</p> <!-- Assuming you have this field -->
+
+    <h3>Track Features</h3>
+    <ul>
+        {% for feature in features %}
+            <li>{{ feature.name }}: {{ feature.value }}</li> <!-- Adjust based on your feature fields -->
+        {% empty %}
+            <li>No features available for this track.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'trending:trending' %}"  class="btn btn-secondary">Back to List</a>
+</div>
+{% endblock content %}

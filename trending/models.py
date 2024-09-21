@@ -190,7 +190,6 @@ class TrackFeatures(models.Model):
 
         self.save()
 
-
     def get_historical_popularity(self, days=30):
         """
         Retrieves historical popularity data for the last `days` days.

@@ -15,6 +15,7 @@ CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://3.130.223.246','https://so
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'allauth',
+    'corsheaders',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.spotify',
@@ -46,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = (
