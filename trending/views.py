@@ -88,9 +88,10 @@ def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
 
 def trend_model_info(request):
     active_model = TrendModel.objects.filter(is_active=True).first()
-
+    inactive_models = TrendModel.objects.filter(is_active=False).order_by('-created_at')
     context = {
-        'active_model': active_model
+        'active_model': active_model,
+        'inactive_models': inactive_models,
     }
     return render(request, 'trending/trend-model.html', context)
 

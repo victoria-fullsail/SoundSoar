@@ -1,6 +1,3 @@
-import os
-import sys
-import django
 from trend_model import train_and_evaluate_models, save_model
 from trending.models import TrendModel
 

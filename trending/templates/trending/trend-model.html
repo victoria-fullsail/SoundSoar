@@ -3,6 +3,7 @@
 
 {% block content %}
     <div class="container mt-5">
+        <!-- Active Model Section -->
         <h1>Active Trend Model Information</h1>
 
         {% if active_model %}
@@ -33,9 +34,39 @@
         {% endif %}
     </div>
 
+    <!-- Inactive Models Section -->
     <div class="container mt-5">
         <h1>Trend Model History</h1>
 
+        {% if inactive_models %}
+            <div class="list-group">
+                {% for model in inactive_models %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h2>Model: {{ model.model_type }}</h2>
+                            <p>Version: {{ model.version_number }}</p>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Description:</strong> {{ model.description }}</p>
+                            <p><strong>Created At:</strong> {{ model.created_at|date:"F j, Y, g:i a" }}</p>
+                            <p><strong>Evaluation Date:</strong> {{ model.evaluation_date|date:"F j, Y, g:i a" }}</p>
+                            <h4>Performance Metrics</h4>
+                            <ul class="list-group">
+                                <li class="list-group-item"><strong>Accuracy:</strong> {{ model.accuracy|floatformat:2 }}</li>
+                                <li class="list-group-item"><strong>Precision:</strong> {{ model.precision|floatformat:2 }}</li>
+                                <li class="list-group-item"><strong>Recall:</strong> {{ model.recall|floatformat:2 }}</li>
+                                <li class="list-group-item"><strong>F1 Score:</strong> {{ model.f1_score|floatformat:2 }}</li>
+                                {% if model.roc_auc %}
+                                    <li class="list-group-item"><strong>ROC AUC:</strong> {{ model.roc_auc|floatformat:2 }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No inactive models found.</p>
+        {% endif %}
     </div>
 
 {% endblock content %}
