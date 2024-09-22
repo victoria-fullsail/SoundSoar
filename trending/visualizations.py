@@ -1,30 +1,10 @@
-from bokeh.plotting import figure
-from bokeh.embed import components
-from bokeh.models import ColumnDataSource, HoverTool
+import plotly.express as px
 import pandas as pd
 
 
-def generate_simple_plot():
-    # Sample data
-    data = {
-        'x': [1, 2, 3, 4, 5],
-        'y': [6, 7, 2, 4, 5],
-    }
-    
-    # Create a DataFrame
-    df = pd.DataFrame(data)
-
-    # Create a Bokeh figure
-    p = figure(title="Simple Line Plot", x_axis_label='X Axis', y_axis_label='Y Axis')
-    p.line(df['x'], df['y'], line_width=2)
-
-    # Return the script and div to embed in the template
-    script, div = components(p)
-    
-    return script, div
-
-
 def generate_top_tracks_interactive_plot(track_data):
+    """Top Ten Track Based on Populartity"""
+
     # Extract track names, artists, albums, and popularity into separate lists
     track_names = []
     track_artists = []
@@ -45,24 +25,17 @@ def generate_top_tracks_interactive_plot(track_data):
         'popularity': track_popularities,
     })
 
-    # Prepare the data for Bokeh
-    source = ColumnDataSource(df)
+    # Sort the DataFrame by popularity and keep the top 10
+    df = df.sort_values(by='popularity', ascending=False).head(10)
 
-    # Create a Bokeh figure
-    p = figure(title="Top Tracks by Popularity", 
-               x_axis_label='Popularity', 
-               y_axis_label='Track Name',
-               tools="hover", 
-               tooltips="@track_name: @popularity<br>@artist: @album",
-               sizing_mode="stretch_both")
+    # Now create the chart, for example, using a horizontal bar chart
+    fig = px.bar(df, x='popularity', y='track_name', orientation='h', hover_data=['artist', 'album'], title='Top 10 Tracks by Popularity')
 
-    # Add circles to the plot
-    p.circle(x='popularity', y='track_name', size=10, source=source)
+    # Convert the figure to HTML for rendering in a Django template
+    chart_html = fig.to_html(full_html=False)
 
-    # Return the script and div to embed in the template
-    script, div = components(p)
+    return chart_html
 
-    return script, div
 
 def generate_track_detail_interactive_plot(track_data):
     # Implement the function for track details as needed

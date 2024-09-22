@@ -2,7 +2,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.generic import TemplateView
 from .models import Chart, Track, TrackFeatures, TrendModel
-from .visualizations import generate_top_tracks_interactive_plot, generate_simple_plot
+from .visualizations import generate_top_tracks_interactive_plot
+import plotly.express as px
+from django.shortcuts import render
 
 class TrackDetailView(TemplateView):
     template_name = 'trending/track-detail.html'  # Create this template
@@ -17,9 +19,19 @@ class TrackDetailView(TemplateView):
         context['features'] = features
         return context
 
-def bokeh_test(request):
-    script, div = generate_simple_plot()
-    return render(request, 'trending/bokeh-test.html', {'script': script, 'div': div})
+def chart_view(request):
+    # Example data using Plotly's built-in datasets
+    df = px.data.gapminder().query("year == 2007")
+    
+    # Create a scatter plot using Plotly Express
+    fig = px.scatter(df, x="gdpPercap", y="lifeExp", size="pop", color="continent",
+                     hover_name="country", log_x=True, size_max=60)
+    
+    # Convert the figure to HTML
+    chart_html = fig.to_html(full_html=False)
+
+    # Render the template and pass the plot as context
+    return render(request, 'trending/plotly-test.html', {'chart': chart_html})
 
 @staff_member_required
 def trending(request):
@@ -62,17 +74,14 @@ def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
     # Fetch all charts for dropdown
     all_charts = Chart.objects.all()
 
-    # Get Bokeh plot
-
-    bokeh_script, bokeh_div = generate_top_tracks_interactive_plot(track_data)
-
+    # Get Plotly Chart HTML
+    topten_chart_html = generate_top_tracks_interactive_plot(track_data)
 
     context = {
         'chart': filtered_chart,
         'track_data': track_data,
         'all_charts': all_charts,
-        'bokeh_script': bokeh_script,
-        'bokeh_div': bokeh_div,
+        'topten_chart_html': topten_chart_html,
     }
     return render(request, 'trending/trending.html', context)
 

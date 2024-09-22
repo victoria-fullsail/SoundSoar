@@ -1,28 +1,27 @@
 {% extends 'core/base.html' %}
 {% load static %}
-
 {% block content %}
 <div class="container mt-5">
-
     <!-- Dropdown for selecting charts -->
     <div class="mb-3">
         <label for="chart-select" class="form-label">Select Chart:</label>
         <select id="chart-select" class="form-select" onchange="location = this.value;">
-            <option value="">-- Choose a Chart --</option>
-            {% for chart in all_charts %}
-                <option value="{% url 'trending:trending_filtered' chart_type=chart.chart_type chart_name=chart.name %}"
-                    {% if chart.name == request.GET.chart_name %} selected{% endif %}>
-                    {{ chart.name }}
+            <!-- Loop through all_charts and set the selected chart -->
+            {% for chart_option in all_charts %}
+                <option value="{% url 'trending:trending_filtered' chart_type=chart_option.chart_type chart_name=chart_option.name %}"
+                    {% if chart_option.name == chart.name %} selected {% endif %}>
+                    {{ chart_option.name }}
                 </option>
             {% endfor %}
         </select>
     </div>
-
-    <!-- Track Popularity Vizualization -->
-    <h2>Interactive Tracks Visualization</h2>
-    {{ bokeh_div|safe }}
-    {{ bokeh_script|safe }}
-
+    <!-- Track Popularity Visualization -->
+    <h2>Top Ten Track for {{ chart.name }}</h2>
+    <div>
+        {{ topten_chart_html|safe }}
+    </div>
+    <br>
+    <h3>Track List</h3>
     <!-- Track Table -->
     {% if track_data %}
         <div class="table-responsive">
@@ -32,7 +31,7 @@
                         <th>Track Name</th>
                         <th>Artist</th>
                         <th>Current Trend</th>
-                        <th>Action</th> <!-- New Action Column -->
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -53,15 +52,10 @@
         <p>No tracks available for this playlist.</p>
     {% endif %}
 </div>
-
-<!-- Include DataTables CSS and JS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<!-- jQuery and DataTables JS/CSS -->
+<link href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<link href="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.css" rel="stylesheet" type="text/css">
-<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.2.min.js"></script>
-
-
+<script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 <!-- Initialize DataTables -->
 <script>
     $(document).ready(function() {
