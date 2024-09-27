@@ -20,11 +20,46 @@ class Chart(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_chart_type_display()})"
     
+class CustomPlaylist(models.Model):
+    chart = models.ForeignKey(Chart, on_delete=models.CASCADE, related_name='custom_playlists')
+    name = models.CharField(max_length=255)
+    tracks = models.ManyToManyField('Track', related_name='custom_playlists', blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.name
+    
+    def update_tracks(self, required_count=25, threshold_popularity=60):
+
+        # Clear existing tracks
+        self.tracks.clear()
+
+        # Query Top tracks by popularity, up, stable
+        high_pop_up_stable_features = TrackFeatures.objects.filter(
+            current_popularity__gte=threshold_popularity,
+            trend__in=['up', 'stable']
+        ).order_by('-current_popularity')[:required_count]
+
+        high_pop_up_stable_tracks = [feature.track for feature in high_pop_up_stable_features]
+        self.tracks.set(high_pop_up_stable_tracks)
+
+        # If not enough tracks, fill with high popularity tracks with down trend
+        remaining_count = required_count - len(high_pop_up_stable_tracks)
+        if remaining_count > 0:
+            high_pop_down_features = TrackFeatures.objects.filter(
+                current_popularity__gte=threshold_popularity,
+                trend='down'
+            ).order_by('-current_popularity')[:remaining_count]
+
+            high_pop_down_tracks = [feature.track for feature in high_pop_down_features]
+            self.tracks.add(*high_pop_down_tracks)
+
+        self.save()
+
 class Playlist(models.Model):
     chart = models.ForeignKey(Chart, on_delete=models.CASCADE, related_name='playlists')
     playlist_id = models.CharField(max_length=100, unique=True)
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
     tracks = models.ManyToManyField('Track', related_name='playlists')
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -33,6 +68,7 @@ class Playlist(models.Model):
 
 class Track(models.Model):
     spotify_id = models.CharField(max_length=100, unique=True)
+    spotify_url = models.URLField(blank=True, null=True)
     name = models.CharField(max_length=255)
     album = models.CharField(max_length=255)
     artist = models.CharField(max_length=255)
@@ -46,7 +82,7 @@ class Track(models.Model):
     instrumentalness = models.FloatField(blank=True, null=True)
     liveness = models.FloatField(blank=True, null=True)
     updated_at = models.DateTimeField(default=timezone.now)
-
+ 
     def __str__(self):
         return f"{self.name} by {self.artist}"
 
@@ -205,6 +241,23 @@ class TrackFeatures(models.Model):
         ).values_list('popularity', flat=True).order_by('timestamp')
 
         return list(historical_data)
+
+    def get_historical_popularity_tuples(self, days=30):
+        """
+        Retrieves historical popularity data for the last `days` days as a list of tuples (timestamp, popularity).
+        """
+        # Get the current timestamp
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=days)
+
+        # Query to get historical popularity data for the track
+        historical_data = PopularityHistory.objects.filter(
+            track=self.track,
+            timestamp__range=(start_date, end_date)
+        ).order_by('timestamp')
+
+        # Create a list of tuples (timestamp, popularity)
+        return [(entry.timestamp, entry.popularity) for entry in historical_data]
 
     def get_trend_model_features_and_target():
         pass

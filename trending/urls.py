@@ -9,5 +9,4 @@ urlpatterns = [
     path('track/<int:pk>/', views.TrackDetailView.as_view(), name='track_detail'),
     path('review/', views.review, name='review'),
     path('model/info/', views.trend_model_info, name='trend_model_info'),
-    path('test/plotly/', views.chart_view, name='chart_view')
 ]

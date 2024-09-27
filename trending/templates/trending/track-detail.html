@@ -1,22 +1,71 @@
 {% extends 'core/base.html' %}
-
+{% load static %}
 {% block content %}
-<div class="container mt-5">
-    <h2>{{ track.name }}</h2>
-    <p><strong>Artist:</strong> {{ track.artist }}</p>
-    <p><strong>Album:</strong> {{ track.album }}</p>
-    <p><strong>Current Trend:</strong> {{ track.current_trend }}</p>
-    <p><strong>Description:</strong> {{ track.description }}</p> <!-- Assuming you have this field -->
+<div class="container mt-4">
 
-    <h3>Track Features</h3>
-    <ul>
-        {% for feature in features %}
-            <li>{{ feature.name }}: {{ feature.value }}</li> <!-- Adjust based on your feature fields -->
-        {% empty %}
-            <li>No features available for this track.</li>
-        {% endfor %}
-    </ul>
+    <!-- Section 1: Top Bar -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <a href="{% url 'trending:trending' %}" class="btn" style="background-color: #b5c1c7; color: black;">
+                <b>Back to Track List</b>
+            </a>
+            <div>
+                <span class="badge" style="background-color: #D9E1E1; color: #333333; font-size: 1rem;">
+                    Current Trend: {{ feature.trend }}
+                </span>
+                <span class="badge" style="background-color: #C7E2D9; color: #333333; font-size: 1rem;">
+                    Predicted Trend: {{ feature.predicted_trend }}
+                </span>
+                <span class="badge" style="background-color: #A5C3CF; color: #333333; font-size: 1rem;">
+                    Lyric Emotion: NA
+                </span>
+            </div>
+        </div>
+    </div>
 
-    <a href="{% url 'trending:trending' %}"  class="btn btn-secondary">Back to List</a>
+    <!-- Section 2: Spotify Info Card and Attributes Chart -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ track.name }}</h5>
+                    <p class="card-text">Artist: {{ track.artist }}</p>
+                    <p class="card-text">Album: {{ track.album }}</p>
+                    <a href="{{ track.spotify_url }}" class="btn" style="color: white; background-color: #1DB954;" target="_blank">Listen on Spotify</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="chart-container">
+                {{ attribute_graph|safe }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Popularity Analysis Card and Trend Chart -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Popularity Analysis</h5>
+                    <p class="card-text">Velocity: {{ feature.velocity }}</p>
+                    <p class="card-text">Current Popularity: {{ feature.current_popularity }}</p>
+                    <p class="card-text">Median Popularity: {{ feature.median_popularity }}</p>
+                    <p class="card-text">Mean Popularity: {{ feature.mean_popularity }}</p>
+                    <p class="card-text">STD Popularity: {{ feature.std_popularity }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="chart-container">
+                {{ popularity_graph|safe }}
+            </div>
+        </div>
+    </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock content %}

@@ -56,16 +56,20 @@ def fetch_track_details(track_id):
     
     audio_features = sp.audio_features(track_id)[0]
     track_info = sp.track(track_id)
-    
+
+    external_urls = track_info.get('external_urls', {})
+
     return {
         'audio_features': audio_features,
-        'track_info': track_info
+        'track_info': track_info,
+        'external_urls': external_urls,
     }
 
 
 def fetch_playlist_with_details(playlist_id):
     """Fetch all tracks and their details (audio features, popularity) from a playlist."""
     track_items = fetch_playlist_tracks(playlist_id)
+    
     detailed_tracks = []
     
     for item in track_items:
@@ -74,14 +78,14 @@ def fetch_playlist_with_details(playlist_id):
         
         # Get audio features and other details
         details = fetch_track_details(track_id)
-        
         detailed_tracks.append({
             'spotify_id': track_id,
             'name': track_data['name'],
             'album': track_data['album']['name'],
             'artists': ', '.join([artist['name'] for artist in track_data['artists']]),
             'popularity': track_data['popularity'],
-            'audio_features': details['audio_features']
+            'audio_features': details['audio_features'],
+            'external_urls': details['external_urls'],
         })
     
     return detailed_tracks

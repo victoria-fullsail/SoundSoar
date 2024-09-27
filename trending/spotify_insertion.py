@@ -9,7 +9,7 @@ def insert_or_update_track(track_data):
     """Insert or update a track record in the database."""
     logger.info(f'Inserting or updating track: {track_data["spotify_id"]}')
     track_id = track_data['spotify_id']
-    
+ 
     track_obj, created = Track.objects.update_or_create(
         spotify_id=track_id,
         defaults={
@@ -25,6 +25,7 @@ def insert_or_update_track(track_data):
             'acousticness': track_data['audio_features'].get('acousticness', None),
             'instrumentalness': track_data['audio_features'].get('instrumentalness', None),
             'liveness': track_data['audio_features'].get('liveness', None),
+            'spotify_url': track_data['external_urls'].get('spotify', None),
             'updated_at': timezone.now()
         }
     )
@@ -93,7 +94,6 @@ def insert_or_update_track_features(track, audio_features):
     )
 
     track_features.update_features()
-    # track_features.predict_and_update_trend()
 
     if created:
         logger.info(f'Created new track features for: {track.spotify_id}')
