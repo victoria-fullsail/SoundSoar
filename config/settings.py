@@ -8,14 +8,19 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = True
 SITE_ID = 1
 
-
 # SERVER SETTINGS
-ALLOWED_HOSTS = ['localhost', '3.130.223.246', 'soundsoar.com', 'www.soundsoar.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '3.130.223.246', 'soundsoar.com', 'www.soundsoar.com']
 CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://3.130.223.246','https://soundsoar.com', 'https://www.soundsoar.com']
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
+
 
 # Application definition
 INSTALLED_APPS = [
@@ -27,6 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'debug_toolbar',
     'allauth',
     'corsheaders',
     'allauth.account',
@@ -43,6 +49,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',

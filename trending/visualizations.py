@@ -85,7 +85,7 @@ def generate_track_attribute_plot(attributes):
         yaxis_title='Attribute',
         xaxis=dict(range=[0, 1])  # Adjust based on the expected attribute range
     )
-    
+
     # Return the figure object
     return fig.to_html(full_html=False)
 

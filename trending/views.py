@@ -45,10 +45,9 @@ class TrackDetailView(TemplateView):
         return context
 
 
-@staff_member_required
 def trending(request):
     # Fetch the most recent spotify chart
-    most_recent_chart = Chart.objects.filter(chart_type='spotify_playlist').order_by('-created_at').first()
+    most_recent_chart = Chart.objects.filter(chart_type='spotify_playlist').order_by('created_at').first()
 
     if most_recent_chart:
         # Redirect to the trending_filtered view based on the chart type
@@ -58,8 +57,6 @@ def trending(request):
         return render(request, 'trending/trending.html', {'charts': [], 'message': 'No playlists available.'})
 
 
-
-@staff_member_required
 def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
     # Fetch the chart based on chart_type and chart_name
     filtered_chart = get_object_or_404(Chart, chart_type=chart_type, name=chart_name)
