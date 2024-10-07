@@ -15,7 +15,7 @@ logger = logging.getLogger('spotify')
 from trending.models import TrackFeatures, Playlist, CustomPlaylist
 from spotify_api import fetch_playlist_with_details, fetch_track_details
 from spotify_insertion import update_playlist_tracks, insert_or_update_track, insert_or_update_track_features, insert_popularity_history
-from update_trend_model import update_active_model
+from update_trend_model import update_active_models
 
 
 def sync_playlist_tracks_task():
@@ -82,22 +82,22 @@ def medium_freq_sync_track_data_task():
 
     logger.info("Medium-frequency track data synchronization completed.")
 
+def update_trend_models():
+    # Update model
+    update_active_models()
 
 def update_all_track_features_predictions():
     """
     Updates the predicted_trend field for all TrackFeatures in the database.
     """
 
-    # Update model
-    update_active_model()
-
     # Update predictions
     track_features = TrackFeatures.objects.all()
 
     for feature in track_features:
         try:
-            feature.predict_and_update_trend()  # Run the prediction and update
             print(f"Updated predicted trend for {feature.track.name} which is {feature.predicted_trend}")
+            feature.predict_and_update_trend()  # Run the prediction and update         
         except Exception as e:
             print(f"Error updating trend for {feature.track.name}: {e}")
 
@@ -118,7 +118,7 @@ def update_custom_playlist():
 
 def main():
     parser = argparse.ArgumentParser(description="Run specific functions.")
-    parser.add_argument('function', choices=['sync_playlist', 'high_freq', 'medium_freq', 'track_predictions', 'update_custom_playlist'], help="Function to run")
+    parser.add_argument('function', choices=['sync_playlist', 'high_freq', 'medium_freq', 'update_models', 'update_predictions', 'update_custom_playlist'], help="Function to run")
     args = parser.parse_args()
 
     if args.function == 'sync_playlist':
@@ -127,7 +127,11 @@ def main():
         high_freq_sync_track_data_task()
     elif args.function == 'medium_freq':
         medium_freq_sync_track_data_task()
-    elif args.function == 'track_predictions':
+        print('models...')
+    elif args.function == 'update_models':
+        update_trend_models()
+    elif args.function == 'update_predictions':
+        print('predictions...')
         update_all_track_features_predictions()
     elif args.function == 'update_custom_playlist':
         update_custom_playlist()

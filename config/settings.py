@@ -33,8 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'debug_toolbar',
-    'allauth',
     'corsheaders',
+    'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.spotify',
@@ -114,6 +114,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Allauth Settings
+LOGIN_URL = 'accounts/login/'
+LOGIN_REDIRECT_URL = 'core:home'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+SOCIALACCOUNT_ENABLED = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "[SoundSoar] "
+ACCOUNT_UNIQUE_EMAIL = True
+
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -150,24 +161,21 @@ SPOTIPY_CLIENT_ID = config('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = config('SPOTIPY_CLIENT_SECRET')
 SPOTIPY_REDIRECT_URI = config('SPOTIPY_REDIRECT_URI')
 
-# SPOTIFY SSO
+# Spotify SSO settings
 SOCIALACCOUNT_PROVIDERS = {
     'spotify': {
-        'AUTH_PARAMS': {
-            'scope': 'user-read-email'
+        'SCOPE': ['user-read-email', 'playlist-read-private', 'playlist-modify-private', 'user-top-read'],
+        'AUTH_PARAMS': {'response_type': 'code'},
+        'APP': {
+            'client_id': config('SPOTIPY_CLIENT_ID'),
+            'secret': config('SPOTIPY_CLIENT_SECRET'),
+            'key': '',
         },
-        'SCOPE': [
-            'user-read-email',
-            'user-read-private',
-            'playlist-read-private',
-            'playlist-read-collaborative',
-            'user-library-read',
-        ],
-        'CLIENT_ID': SPOTIPY_CLIENT_ID,
-        'SECRET': SPOTIPY_CLIENT_SECRET,
-        'REDIRECT_URI': SPOTIPY_REDIRECT_URI,
+        'VERIFIED_EMAIL': True,
     }
 }
+
+
 
 SPOTIFY_LOG_FILE_PATH = os.path.join(BASE_DIR, 'logs', 'spotify.log')
 

@@ -29,7 +29,7 @@ class CustomPlaylist(models.Model):
     def __str__(self):
         return self.name
     
-    def update_tracks(self, required_count=25, threshold_popularity=60):
+    def update_tracks(self, required_count=25, threshold_popularity=65):
 
         # Clear existing tracks
         self.tracks.clear()
@@ -37,22 +37,11 @@ class CustomPlaylist(models.Model):
         # Query Top tracks by popularity, up, stable
         high_pop_up_stable_features = TrackFeatures.objects.filter(
             current_popularity__gte=threshold_popularity,
-            trend__in=['up', 'stable']
+            predicted_trend__in=['up']
         ).order_by('-current_popularity')[:required_count]
 
         high_pop_up_stable_tracks = [feature.track for feature in high_pop_up_stable_features]
         self.tracks.set(high_pop_up_stable_tracks)
-
-        # If not enough tracks, fill with high popularity tracks with down trend
-        remaining_count = required_count - len(high_pop_up_stable_tracks)
-        if remaining_count > 0:
-            high_pop_down_features = TrackFeatures.objects.filter(
-                current_popularity__gte=threshold_popularity,
-                trend='down'
-            ).order_by('-current_popularity')[:remaining_count]
-
-            high_pop_down_tracks = [feature.track for feature in high_pop_down_features]
-            self.tracks.add(*high_pop_down_tracks)
 
         self.save()
 
@@ -108,7 +97,13 @@ class TrackFeatures(models.Model):
     retrieval_frequency = models.CharField(max_length=50, blank=True, null=True, choices=[('high', 'High Frequency'), ('medium', 'Medium Frequency'), ('low', 'Low Frequency')], default='low')
     updated_at = models.DateTimeField(default=timezone.now)
 
+    rf_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    hgb_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    lr_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    svm_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+
     predicted_trend = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+
 
     def __str__(self):
         return f"Features for {self.track.name}"
@@ -172,20 +167,12 @@ class TrackFeatures(models.Model):
         # Update the updated_at timestamp and save the instance
         self.updated_at = timezone.now()
         self.save()
-    
+
     def predict_and_update_trend(self):
         """
-        Use the trained model to predict the trend and update the `predicted_trend` field.
+        Use the trained models to predict the trend and update the predictions in the model.
+        Determine the overall predicted trend based on the most common prediction.
         """
-        # Query the active model from the database
-        active_model = TrendModel.objects.filter(is_active=True).first()
-
-        if not active_model:
-            raise ValueError("No active model found for trend prediction.")
-
-        # Load the model and its expected feature names
-        model, feature_names = load_active_model(active_model)
-
         # Prepare the input features for prediction
         retrieval_frequency_mapping = {'high': 2, 'medium': 1, 'low': 0}
         retrieval_frequency = retrieval_frequency_mapping.get(self.retrieval_frequency, np.nan)
@@ -204,27 +191,63 @@ class TrackFeatures(models.Model):
             'retrieval_frequency': retrieval_frequency
         }
 
-        features_df = pd.DataFrame([features])[feature_names]
-        features_df = features_df.replace({None: np.nan}).infer_objects(copy=False)
+        features_df = pd.DataFrame([features])
 
-        # Predict the trend
-        try:
-            prediction = model.predict(features_df)[0]
-            print("Prediction:", prediction)
-        except Exception as e:
-            print(f"Error during prediction: {e}")
-            return
+        # Store predictions from each model
+        predictions = {
+            'rf': self.predict_rf(features_df),
+            'hgb': self.predict_hgb(features_df),
+            'lr': self.predict_lr(features_df),
+            'svm': self.predict_svm(features_df)
+        }
 
+        # Update the prediction fields
+        self.rf_prediction = predictions['rf']
+        self.hgb_prediction = predictions['hgb']
+        self.lr_prediction = predictions['lr']
+        self.svm_prediction = predictions['svm']
 
-        # Update the `predicted_trend` field
-        if prediction == 1:
-            self.predicted_trend = 'up'
-        elif prediction == -1:
-            self.predicted_trend = 'down'
-        elif prediction == 0:
-            self.predicted_trend = 'stable'
+        # Determine the most common prediction
+        most_common_prediction = max(set(predictions.values()), key=predictions.values().count)
+        self.predicted_trend = most_common_prediction
 
         self.save()
+
+    def predict_rf(self, features_df):
+        rf_model = TrendModel.objects.get(model_type='RandomForest', is_active=True)
+        print('Predicting with RF...')
+        model, feature_names = load_active_model(rf_model)
+        return self.map_prediction(model.predict(features_df[feature_names])[0])
+
+    def predict_hgb(self, features_df):
+        hgb_model = TrendModel.objects.get(model_type='HistGradientBoost', is_active=True)
+        print('Predicting with HGB...')
+        model, feature_names = load_active_model(hgb_model)
+        return self.map_prediction(model.predict(features_df[feature_names])[0])
+
+    def predict_lr(self, features_df):
+        lr_model = TrendModel.objects.get(model_type='LogisticRegression', is_active=True)
+        print('Predicting with LR...')
+        model, feature_names = load_active_model(lr_model)
+        return self.map_prediction(model.predict(features_df[feature_names])[0])
+
+    def predict_svm(self, features_df):
+        svm_model = TrendModel.objects.get(model_type='SVM', is_active=True)
+        print('Predicting with SVM...')
+        model, feature_names = load_active_model(svm_model)
+        return self.map_prediction(model.predict(features_df[feature_names])[0])
+
+    def map_prediction(self, prediction):
+        """
+        Map numeric predictions to string labels.
+        """
+        if prediction == 1:
+            return 'up'
+        elif prediction == -1:
+            return 'down'
+        elif prediction == 0:
+            return 'stable'
+        return None
 
     def get_historical_popularity(self, days=30):
         """
@@ -270,14 +293,17 @@ class TrendModel(models.Model):
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=False)
+    is_best = models.BooleanField(default=False)
     model_type = models.CharField(max_length=25, choices=[
         ('RandomForest', 'RandomForest'), 
-        ('HistGradientBoost', 'HistGradientBoost')
+        ('HistGradientBoost', 'HistGradientBoost'),
+        ('LogisticRegression', 'LogisticRegression'),
+        ('SVM', 'SVM')  
     ])
-    accuracy = models.FloatField()
-    precision = models.FloatField()
-    recall = models.FloatField()
-    f1_score = models.FloatField()
+    accuracy = models.FloatField(blank=True, null=True)
+    precision = models.FloatField(blank=True, null=True)
+    recall = models.FloatField(blank=True, null=True)
+    f1_score = models.FloatField(blank=True, null=True)
     roc_auc = models.FloatField(null=True, blank=True)
     evaluation_date = models.DateTimeField(default=timezone.now)
 
@@ -298,7 +324,6 @@ class TrendModel(models.Model):
 
     def activate(self):
         """Activate this model and deactivate all others."""
-        TrendModel.objects.update(is_active=False)  # Deactivate all other versions
         self.is_active = True
         self.save()
 

@@ -16,8 +16,9 @@ def save_model_with_version(model, version_number, feature_names=None):
 
 
 # Function to update the active model in the database
-def update_active_model():
-    results, best_model, feature_names = train_and_evaluate_models()
+def update_active_models():
+    results, all_trained_models, best_model, feature_names = train_and_evaluate_models()
+    
     if not best_model:
         print("No best model found.")
         return
@@ -38,6 +39,7 @@ def update_active_model():
         f1_score=best_model_results['classification_report']['weighted avg']['f1-score'],
         roc_auc=best_model_results.get('roc_auc', None),
         description=f'Best performing model: {best_model_name}',
+        is_best=True
     )
     new_version.activate()
 
@@ -45,5 +47,26 @@ def update_active_model():
     model_file_path = save_model_with_version(best_model, new_version.version_number, feature_names) 
     print(f"Model version {new_version.version_number} saved at {model_file_path}")
 
+    # Save other models
+    for model_name, model in all_trained_models.items():
+        if model_name != best_model_name:  # Exclude the best model
+            model_results = results[model_name]
+            new_version = TrendModel.objects.create(
+                model_type=model_name,
+                accuracy=model_results['accuracy'],
+                precision=model_results['classification_report']['weighted avg']['precision'],
+                recall=model_results['classification_report']['weighted avg']['recall'],
+                f1_score=model_results['classification_report']['weighted avg']['f1-score'],
+                roc_auc=model_results.get('roc_auc', None),
+                description=f'Other model: {model_name}',
+                is_best=False  # Not the best model
+            )
+            new_version.activate()
+
+            # Save the model with version number
+            model_file_path = save_model_with_version(model, new_version.version_number, feature_names)
+            print(f"Model version {new_version.version_number} saved at {model_file_path}")
+
+
 if __name__ == '__main__':
-    update_active_model()
+    update_active_models()
