@@ -2,9 +2,9 @@ from trend_model import train_and_evaluate_models, save_model
 from trending.models import TrendModel
 
 # Function to save a model with version number
-def save_model_with_version(model, version_number, feature_names=None):
+def save_model_with_version(model, version_number, feature_names, imputer):
     model_file_path = f'trending/ml_models/{version_number}_model.pkl'
-    save_model(model, model_file_path)
+    save_model(model, feature_names, imputer, model_file_path)
 
     # Optionally save feature names
     if feature_names:
@@ -17,7 +17,7 @@ def save_model_with_version(model, version_number, feature_names=None):
 
 # Function to update the active model in the database
 def update_active_models():
-    results, all_trained_models, best_model, feature_names = train_and_evaluate_models()
+    results, all_trained_models, best_model, feature_names, imputer = train_and_evaluate_models()
     
     if not best_model:
         print("No best model found.")
@@ -44,7 +44,7 @@ def update_active_models():
     new_version.activate()
 
     # Save the model with version number
-    model_file_path = save_model_with_version(best_model, new_version.version_number, feature_names) 
+    model_file_path = save_model_with_version(best_model, new_version.version_number, feature_names, imputer) 
     print(f"Model version {new_version.version_number} saved at {model_file_path}")
 
     # Save other models
@@ -64,7 +64,7 @@ def update_active_models():
             new_version.activate()
 
             # Save the model with version number
-            model_file_path = save_model_with_version(model, new_version.version_number, feature_names)
+            model_file_path = save_model_with_version(model, new_version.version_number, feature_names, imputer)
             print(f"Model version {new_version.version_number} saved at {model_file_path}")
 
 

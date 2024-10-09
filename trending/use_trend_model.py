@@ -8,6 +8,8 @@ def load_active_model(active_model):
     :return: Loaded model, feature names
     :raises RuntimeError: If no active model is found
     """
+    print('enter load active model')
+
     if not active_model:
         raise RuntimeError("No active model found in the database.")
 
@@ -23,15 +25,15 @@ def load_active_model(active_model):
         raise RuntimeError(f"Model file not found: {model_file_path}")
 
     # Load the model
-    model = joblib.load(model_file_path)
+    model, feature_names, imputer = joblib.load(model_file_path)
 
     # Retrieve expected feature names
-    feature_names = [
+    feature_names2 = [
         'track__valence', 'track__tempo', 'track__speechiness', 
         'track__danceability', 'track__liveness', 'velocity', 
         'current_popularity', 'median_popularity', 'mean_popularity', 
         'std_popularity', 'retrieval_frequency'
     ]
-    
-    return model, feature_names
+    print('exiting load active model')
+    return model, feature_names, imputer
 

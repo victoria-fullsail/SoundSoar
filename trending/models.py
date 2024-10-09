@@ -4,7 +4,10 @@ from datetime import timedelta
 import numpy as np
 import pandas as pd
 from .use_trend_model import load_active_model 
-
+import numpy as np
+import pandas as pd
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
 
 class Chart(models.Model):
     CHART_TYPE_CHOICES = [
@@ -104,7 +107,6 @@ class TrackFeatures(models.Model):
 
     predicted_trend = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
 
-
     def __str__(self):
         return f"Features for {self.track.name}"
 
@@ -185,21 +187,60 @@ class TrackFeatures(models.Model):
             'track__liveness': self.track.liveness,
             'velocity': self.velocity,
             'current_popularity': self.current_popularity,
-            'median_popularity': self.median_popularity,
-            'mean_popularity': self.mean_popularity,
-            'std_popularity': self.std_popularity,
+            'median_popularity': self.median_popularity if self.median_popularity is not None else self.current_popularity,
+            'mean_popularity': self.mean_popularity if self.mean_popularity is not None else self.current_popularity,
+            'std_popularity': self.std_popularity if self.std_popularity is not None else 0,
             'retrieval_frequency': retrieval_frequency
         }
 
         features_df = pd.DataFrame([features])
+        print('features_df: ', features_df)
 
-        # Store predictions from each model
-        predictions = {
-            'rf': self.predict_rf(features_df),
-            'hgb': self.predict_hgb(features_df),
-            'lr': self.predict_lr(features_df),
-            'svm': self.predict_svm(features_df)
+        # Load the active RandomForest model to get the imputer (or any other active model with saved imputer)
+        try:
+            rf_model = TrendModel.objects.get(model_type='RandomForest', is_active=True)
+            _, feature_names, imputer = load_active_model(rf_model)
+        except TrendModel.DoesNotExist:
+            print("Error: No active RandomForest model found.")
+            return None
+        except Exception as e:
+            print(f"An error occurred while fetching the RandomForest model: {e}")
+            return None
+
+        # Apply the imputer loaded with the model
+        features_imputed = pd.DataFrame(imputer.transform(features_df), columns=features_df.columns)
+        print('features_imputed: ', features_imputed)
+
+        # Load all active models
+        active_models = {
+            'rf': TrendModel.objects.get(model_type='RandomForest', is_active=True),
+            'hgb': TrendModel.objects.get(model_type='HistGradientBoosting', is_active=True),
+            'lr': TrendModel.objects.get(model_type='LogisticRegression', is_active=True),
+            'svm': TrendModel.objects.get(model_type='SVM', is_active=True)
         }
+
+        predictions = {}
+
+        # Iterate over the models and make predictions
+        for model_name, model_instance in active_models.items():
+            try:
+                model, feature_names, _ = load_active_model(model_instance)
+
+                # If the model is Logistic Regression or SVM, scale the features
+                if model_name in ['lr', 'svm']:
+                    scaler = StandardScaler()
+                    features_scaled = pd.DataFrame(scaler.fit_transform(features_imputed), columns=features_imputed.columns)
+                    features_for_model = features_scaled[feature_names]
+                else:
+                    # No scaling needed for other models
+                    features_for_model = features_imputed[feature_names]
+
+                # Make the prediction
+                predictions[model_name] = self.map_prediction(model.predict(features_for_model.values)[0])
+
+            except Exception as e:
+                print(f"An error occurred while predicting with {model_name}: {e}")
+                predictions[model_name] = None
 
         # Update the prediction fields
         self.rf_prediction = predictions['rf']
@@ -208,34 +249,10 @@ class TrackFeatures(models.Model):
         self.svm_prediction = predictions['svm']
 
         # Determine the most common prediction
-        most_common_prediction = max(set(predictions.values()), key=predictions.values().count)
+        most_common_prediction = max(set(predictions.values()), key=list(predictions.values()).count)
         self.predicted_trend = most_common_prediction
 
         self.save()
-
-    def predict_rf(self, features_df):
-        rf_model = TrendModel.objects.get(model_type='RandomForest', is_active=True)
-        print('Predicting with RF...')
-        model, feature_names = load_active_model(rf_model)
-        return self.map_prediction(model.predict(features_df[feature_names])[0])
-
-    def predict_hgb(self, features_df):
-        hgb_model = TrendModel.objects.get(model_type='HistGradientBoost', is_active=True)
-        print('Predicting with HGB...')
-        model, feature_names = load_active_model(hgb_model)
-        return self.map_prediction(model.predict(features_df[feature_names])[0])
-
-    def predict_lr(self, features_df):
-        lr_model = TrendModel.objects.get(model_type='LogisticRegression', is_active=True)
-        print('Predicting with LR...')
-        model, feature_names = load_active_model(lr_model)
-        return self.map_prediction(model.predict(features_df[feature_names])[0])
-
-    def predict_svm(self, features_df):
-        svm_model = TrendModel.objects.get(model_type='SVM', is_active=True)
-        print('Predicting with SVM...')
-        model, feature_names = load_active_model(svm_model)
-        return self.map_prediction(model.predict(features_df[feature_names])[0])
 
     def map_prediction(self, prediction):
         """
@@ -281,12 +298,6 @@ class TrackFeatures(models.Model):
 
         # Create a list of tuples (timestamp, popularity)
         return [(entry.timestamp, entry.popularity) for entry in historical_data]
-
-    def get_trend_model_features_and_target():
-        pass
-
-    def get_popularity_model_features_and_target():
-        pass
 
 class TrendModel(models.Model):
     version_number = models.CharField(max_length=25, unique=True, blank=True)

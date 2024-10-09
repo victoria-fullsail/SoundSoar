@@ -18,6 +18,15 @@ sys.path.append(BASE_DIR)
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
+import joblib
+
+def save_model(model, feature_names, imputer, file_path):
+    try:
+        joblib.dump((model, feature_names, imputer), file_path)
+        print(f"Model saved successfully to {file_path}")
+    except Exception as e:
+        print(f"Error saving model: {e}")
+
 
 # Function to train models and evaluate them
 def train_and_evaluate_models():
@@ -34,10 +43,10 @@ def train_and_evaluate_models():
 
     # Define the models to include
     models = {
-        'RandomForest': RandomForestClassifier(),
-        'HistGradientBoosting': HistGradientBoostingClassifier(),
-        'LogisticRegression': LogisticRegression(max_iter=1000),
-        'SVM': SVC()
+        'RandomForest': RandomForestClassifier(random_state=42, class_weight='balanced'),
+        'HistGradientBoosting': HistGradientBoostingClassifier(random_state=42),
+        'LogisticRegression': LogisticRegression(random_state=42, class_weight='balanced'),
+        'SVM': SVC(random_state=42)
     }
 
     # Define the parameter grids for each model
@@ -111,6 +120,6 @@ def train_and_evaluate_models():
             best_model = best_model_candidate
 
     # Return all results, all models, and the best model
-    return results, all_trained_models, best_model, feature_names
+    return results, all_trained_models, best_model, feature_names, imputer
 
 
