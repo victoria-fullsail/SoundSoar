@@ -107,12 +107,11 @@ def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
     return render(request, 'trending/trending.html', context)
 
 
-
 def trend_model_info(request):
-    active_model = TrendModel.objects.filter(is_active=True).first()
+    active_models = TrendModel.objects.filter(is_active=True).order_by('-created_at')
     inactive_models = TrendModel.objects.filter(is_active=False).order_by('-created_at')
     context = {
-        'active_model': active_model,
+        'active_models': active_models,
         'inactive_models': inactive_models,
     }
     return render(request, 'trending/trend-model.html', context)

@@ -3,34 +3,37 @@
 {% block content %}
     <!-- Active Models Section -->
     <div class="container mt-5">
-        <!-- Active Model Section -->
         <h1>Active Trend Model Information</h1>
 
-        {% if active_model %}
-            <div class="card">
-                <div class="card-header">
-                    <h2>Model: {{ active_model.model_type }}</h2>
-                    <p>Version: {{ active_model.version_number }}</p>
+        {% if active_models %}
+        <div>
+            {% for active_model in active_models %}
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Model: {{ active_model.model_type }}</h2>
+                        <p>Version: {{ active_model.version_number }}</p>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Description:</strong> {{ active_model.description }}</p>
+                        <p><strong>Created At:</strong> {{ active_model.created_at|date:"F j, Y, g:i a" }}</p>
+                        <p><strong>Evaluation Date:</strong> {{ active_model.evaluation_date|date:"F j, Y, g:i a" }}</p>
+                        
+                        <h4>Performance Metrics</h4>
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Accuracy:</strong> {{ active_model.accuracy|floatformat:2 }}</li>
+                            <li class="list-group-item"><strong>Precision:</strong> {{ active_model.precision|floatformat:2 }}</li>
+                            <li class="list-group-item"><strong>Recall:</strong> {{ active_model.recall|floatformat:2 }}</li>
+                            <li class="list-group-item"><strong>F1 Score:</strong> {{ active_model.f1_score|floatformat:2 }}</li>
+                            {% if active_model.roc_auc %}
+                                <li class="list-group-item"><strong>ROC AUC:</strong> {{ active_model.roc_auc|floatformat:2 }}</li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p><strong>Description:</strong> {{ active_model.description }}</p>
-                    <p><strong>Created At:</strong> {{ active_model.created_at|date:"F j, Y, g:i a" }}</p>
-                    <p><strong>Evaluation Date:</strong> {{ active_model.evaluation_date|date:"F j, Y, g:i a" }}</p>
-                    
-                    <h4>Performance Metrics</h4>
-                    <ul class="list-group">
-                        <li class="list-group-item"><strong>Accuracy:</strong> {{ active_model.accuracy|floatformat:2 }}</li>
-                        <li class="list-group-item"><strong>Precision:</strong> {{ active_model.precision|floatformat:2 }}</li>
-                        <li class="list-group-item"><strong>Recall:</strong> {{ active_model.recall|floatformat:2 }}</li>
-                        <li class="list-group-item"><strong>F1 Score:</strong> {{ active_model.f1_score|floatformat:2 }}</li>
-                        {% if active_model.roc_auc %}
-                            <li class="list-group-item"><strong>ROC AUC:</strong> {{ active_model.roc_auc|floatformat:2 }}</li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
+            {% endfor %}
+        </div>
         {% else %}
-            <p>No active model found.</p>
+            <p>No active models found.</p>
         {% endif %}
     </div>
 
