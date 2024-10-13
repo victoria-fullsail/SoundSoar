@@ -1,10 +1,40 @@
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyOAuth
 import logging
 from decouple import config, Config, RepositoryEnv
 import os
 
 logger = logging.getLogger('spotify')
+
+def get_spotify_client_with_redirect():
+    """
+    Initializes the Spotify client using the credentials from environment variables.
+
+    Returns:
+        spotipy.Spotify: Authenticated Spotify client.
+    """
+    # Load the .env file path the same way you do in get_spotify_client()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(script_dir)
+    env_path = os.path.join(parent_dir, 'config', '.env')
+
+    # Create a Config object with the .env path
+    env_config = Config(RepositoryEnv(env_path))
+
+    CLIENT_ID = env_config('SPOTIPY_CLIENT_ID')
+    CLIENT_SECRET = env_config('SPOTIPY_CLIENT_SECRET')
+    REDIRECT_URI = env_config('SPOTIPY_REDIRECT_URI')
+
+    # Now use the loaded environment variables for OAuth
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        redirect_uri=REDIRECT_URI,
+        scope='user-library-read'
+    ))
+
+    return sp
 
 
 def get_spotify_client():

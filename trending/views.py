@@ -1,10 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.admin.views.decorators import staff_member_required
 from django.views.generic import TemplateView
 from .models import Chart, Track, TrackFeatures, TrendModel
 from .visualizations import generate_top_ten_track_plot, generate_track_attribute_plot, generate_track_popularity_trend_plot
-import plotly.express as px
 from django.shortcuts import render
+from .spotify_search import SpotifySearch
+
 
 class TrackDetailView(TemplateView):
     template_name = 'trending/track-detail.html'
@@ -120,8 +120,30 @@ def trend_model_info(request):
 def review(request):
     # Retrieve a sample TrackFeatures object for display
     track_features = TrackFeatures.objects.order_by('-updated_at').first()  # Fetch the most recent TrackFeatures
+    tracks = Track.objects.order_by('-updated_at').first()  # Fetch the most recent TrackFeatures
 
     context = {
-        'track_features': track_features
+        'track_features': track_features,
+        'tracks': tracks
     }
     return render(request, 'trending/ready-review.html', context)
+
+
+def search_spotify(request):
+    query = request.GET.get('query', '')
+    searcher = SpotifySearch()
+
+    track_data = []  # Initialize an empty list for track data
+
+    if query:
+        # Perform the search for tracks using the SpotifySearch class
+        results = searcher.search_tracks(query)
+        track_data = results  # Assign the search results directly to track_data
+
+    # Create a context dictionary to pass data to the template
+    context = {
+        'track_data': track_data,  # Pass the track data to the template
+        'query': query,
+    }
+
+    return render(request, 'trending/search.html', context)

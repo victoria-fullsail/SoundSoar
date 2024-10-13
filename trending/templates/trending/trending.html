@@ -57,6 +57,7 @@
                         <th data-field="track_name" data-sortable="true">Track Name</th>
                         <th data-field="artist" data-sortable="true">Artist</th>
                         <th data-field="trend" data-sortable="true">Current Trend</th>
+                        <th data-field="trend" data-sortable="true">Predicted Trend</th>
                         <th data-field="action" data-sortable="false">Action</th> <!-- Ensure 'sortable' is false for action -->
                     </tr>
                 </thead>
@@ -67,6 +68,7 @@
                             <td>{{ track.name }}</td>
                             <td>{{ track.artist }}</td>
                             <td>{% if feature %}{{ feature.trend }}{% else %}N/A{% endif %}</td>
+                            <td>{% if feature %}{{ feature.predicted_trend }}{% else %}N/A{% endif %}</td>
                             <td>
                                 <a class="btn" href="{% url 'trending:track_detail' track.id %}" style="background-color: #b5c1c7; color: black;">
                                     View Details
