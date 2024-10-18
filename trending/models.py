@@ -7,7 +7,7 @@ from .use_trend_model import load_active_model
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-from django.db import transaction, IntegrityError
+from django.db import transaction
 
 class Chart(models.Model):
     CHART_TYPE_CHOICES = [
@@ -104,6 +104,9 @@ class TrackFeatures(models.Model):
     hgb_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
     lr_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
     svm_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    lda_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    extra_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
+    knn_prediction = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
 
     predicted_trend = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
 
@@ -111,11 +114,20 @@ class TrackFeatures(models.Model):
         return f"Features for {self.track.name}"
 
     def calculate_velocity(self):
+        """
+        Calculate the velocity of popularity based on historical data.
+
+        Velocity is defined as the rate of change of popularity over time.
+        If there are less than two historical popularity values, velocity is set to 0.
+
+        Attributes:
+            velocity (float): The calculated velocity of popularity change.
+        """
         historical_popularity = self.get_historical_popularity()
         if len(historical_popularity) < 2:
             self.velocity = 0
             return
-        
+            
         recent = np.array(historical_popularity[-2:])
         rate_of_change = (recent[1] - recent[0]) / recent[0] if recent[0] != 0 else 0
         self.velocity = rate_of_change
@@ -133,16 +145,45 @@ class TrackFeatures(models.Model):
         self.std_popularity = np.std(historical_popularity) if historical_popularity else None
 
     def calculate_trend(self):
-        # Use median, mean, or any other relevant statistics for trend determination
-        if self.mean_popularity and self.current_popularity:
-            if self.current_popularity > self.mean_popularity:
-                self.trend = 'up'
-            elif self.current_popularity < self.mean_popularity:
-                self.trend = 'down'
-            else:
-                self.trend = 'stable'
-        else:
+        """
+        Determines the trend of current popularity compared to historical data.
+        A trend can be 'up', 'down', or 'stable' based on:
+        - Current popularity vs. mean popularity
+        - Rate of change (velocity) of historical popularity
+        """
+
+        # Get historical popularity data
+        historical_popularity = self.get_historical_popularity()
+        
+        # If there are not enough data points to determine a trend, default to 'stable'
+        if len(historical_popularity) < 3:
             self.trend = 'stable'
+            return
+
+        # Use the previously calculated mean popularity
+        mean_popularity = self.mean_popularity
+        
+        # Compare current popularity with mean popularity
+        if self.current_popularity > mean_popularity:
+            # Determine trend direction based on velocity
+            if self.velocity > 0:
+                self.trend = 'up'  # Upward trend
+            elif self.velocity == 0:
+                self.trend = 'stable'  # No significant change
+            else:
+                self.trend = 'down'  # Current popularity is decreasing
+
+        elif self.current_popularity < mean_popularity:
+            # Determine trend direction based on velocity
+            if self.velocity < 0:
+                self.trend = 'down'  # Downward trend
+            elif self.velocity == 0:
+                self.trend = 'stable'  # No significant change
+            else:
+                self.trend = 'up'  # Current popularity is improving
+
+        else:
+            self.trend = 'stable'  # Current popularity equals mean
 
     def calculate_frequency(self):
         # Determine retrieval frequency based on velocity
@@ -212,7 +253,10 @@ class TrackFeatures(models.Model):
             'rf': TrendModel.objects.get(model_type='RandomForest', is_active=True),
             'hgb': TrendModel.objects.get(model_type='HistGradientBoosting', is_active=True),
             'lr': TrendModel.objects.get(model_type='LogisticRegression', is_active=True),
-            'svm': TrendModel.objects.get(model_type='SVM', is_active=True)
+            'svm': TrendModel.objects.get(model_type='SVM', is_active=True),
+            'lda': TrendModel.objects.get(model_type='LDA', is_active=True),
+            'et': TrendModel.objects.get(model_type='ExtraTrees', is_active=True),
+            'knn': TrendModel.objects.get(model_type='KNN', is_active=True)
         }
 
         predictions = {}
@@ -243,6 +287,10 @@ class TrackFeatures(models.Model):
         self.hgb_prediction = predictions['hgb']
         self.lr_prediction = predictions['lr']
         self.svm_prediction = predictions['svm']
+        self.lda_prediction = predictions['lda']
+        self.extra_prediction = predictions['et']
+        self.knn_prediction = predictions['knn']
+
 
         # Determine the most common prediction
         most_common_prediction = max(set(predictions.values()), key=list(predictions.values()).count)

@@ -1,5 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load my_filters %}
 {% block content %}
 <div class="container mt-5">
     <!-- Section 1: Title -->
@@ -16,7 +17,7 @@
             <form method="GET" action="{% url 'trending:search_spotify' %}">
                 <div class="input-group">
                     <input type="text" class="form-control" name="query" placeholder="Search for tracks..." required>
-                    <button class="btn btn-primary" type="submit">Search</button>
+                    <button class="btn btn-primary" type="submit" style="background-color: #0077b6; border-color: #0077b6;">Search</button>
                 </div>
             </form>
         </div>
@@ -26,11 +27,7 @@
     <h3 class="mb-3">Track List</h3>
     {% if track_data %}
         <div class="table-responsive">
-            <table id="trackTable" 
-                class="table table-striped" 
-                data-toggle="table" 
-                data-pagination="true"
-                data-search="false">
+            <table id="trackTable" class="table table-striped" data-toggle="table" data-pagination="true" data-search="false">
                 <thead class="table-dark">
                     <tr>
                         <th data-field="order" data-sortable="true">#</th>
@@ -45,12 +42,18 @@
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>{{ track.name }}</td>
-                            <td>{{ track.artists.0.name }}</td>  <!-- Accessing the first artist's name -->
+                            <td>{{ track.artists.0.name }}</td>
                             <td>{{ track.album.name }}</td>
                             <td>
-                                <a class="btn" href="#" style="background-color: #b5c1c7; color: black;">
+                                <button class="btn" style="background-color: #b5c1c7; color: black;" data-bs-toggle="modal" data-bs-target="#trackModal" 
+                                    data-name="{{ track.name }}" 
+                                    data-artist="{{ track.artists.0.name }}" 
+                                    data-album="{{ track.album.name }}" 
+                                    data-prediction="{{ track.prediction }}"
+                                    data-popularity="{{ track.popularity }}"  
+                                    data-chart="{{ track.chart_html|safe }}">  <!-- Directly pass the HTML with safe filter -->
                                     View Details
-                                </a>                                
+                                </button>                                 
                             </td>
                         </tr>
                     {% endfor %}
@@ -60,10 +63,58 @@
     {% else %}
         <div class="alert alert-warning" role="alert">No tracks found for this query.</div>
     {% endif %}
+    
+    <!-- Track Details Modal -->
+    <div class="modal fade" id="trackModal" tabindex="-1" aria-labelledby="trackModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="margin: auto; padding-top: 20px; padding-bottom: 20px;">
+            <div class="modal-content" style="border-radius: 15px; border: 2px solid #333; background-color: #ffffff;">
+                <div class="modal-header" style="background-color: #0077b6;">
+                    <h5 class="modal-title text-white" id="trackModalLabel">Track Details</h5>
+                    <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; padding: 0;">
+                        <i class="fas fa-times" style="color: black; font-size: 20px;"></i>
+                    </button>                 
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <p style="margin-bottom: 10px;"><strong>Track:</strong> <span id="modalTrackName"></span></p>
+                    <p style="margin-bottom: 10px;"><strong>Album:</strong> <span id="modalAlbumName"></span></p>
+                    <p style="margin-bottom: 10px;"><strong>Artist:</strong> <span id="modalArtistName"></span></p>
+                    <p style="margin-bottom: 10px;"><strong>Current Popularity Score:</strong> <span id="modalPopularity"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Include jQuery -->
+    <!-- Include jQuery, Bootstrap JS, and Plotly.js -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.18.3/dist/bootstrap-table.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.18.3/dist/bootstrap-table.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // JavaScript to handle modal population
+        $('#trackModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var name = button.data('name'); // Extract info from data-* attributes
+            var artist = button.data('artist');
+            var album = button.data('album');
+            var prediction = button.data('prediction');
+            var popularity = button.data('popularity'); // Current popularity
+            var chartHtml = button.data('chart'); // HTML for the Plotly chart
+
+            // Update the modal's content
+            var modal = $(this);
+            modal.find('#modalTrackName').text(name);
+            modal.find('#modalArtistName').text(artist);
+            modal.find('#modalAlbumName').text(album);
+            modal.find('#modalPrediction').text(prediction);
+            modal.find('#modalPopularity').text(popularity); // Set current popularity score
+
+            // Spotify link (add actual Spotify link data to button data in future)
+            var spotifyLink = "#"; // Placeholder for now
+            modal.find('#spotifyLink').attr('href', spotifyLink);
+
+            // Inject the Plotly chart HTML into the modal
+            var chartContainer = modal.find('#chartContainer');
+            chartContainer.html(chartHtml); // Directly inject the HTML
+        });
+    </script>
 </div>
 {% endblock content %}

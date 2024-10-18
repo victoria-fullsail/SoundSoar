@@ -1,0 +1,40 @@
+# Model Version: v77.0
+
+## Model Type: SVM
+
+## Best Parameters
+```
+C: 10, gamma: scale, kernel: linear
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.89375
+- **Precision**: 0.9041255051638977
+- **Recall**: 0.89375
+- **F1 Score**: 0.8833939739122666
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[115,   0,   0],
+ [  6,  16,   0],
+ [ 10,   1,  12]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

@@ -16,8 +16,12 @@
 <div class="search-section">
     <h2 class="search-title">Search for a Song</h2>
     <div class="search-container">
-        <input type="text" class="search-bar" placeholder="Enter song name...">
-        <button class="search-button">Search</button>
+        <form method="GET" action="{% url 'trending:search_spotify' %}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="query" placeholder="Search for tracks..." required>
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock content %}

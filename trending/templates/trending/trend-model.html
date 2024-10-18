@@ -21,6 +21,7 @@
                         <h5>General Information</h5>
                         <ul class="list-group">
                             <li class="list-group-item"><strong>Model Type:</strong> {{ active_model.model_type }}</li>
+                            <li class="list-group-item"><strong>Parameters:</strong> {{ active_model.best_parameters }}</li>
                             <li class="list-group-item"><strong>Version Number:</strong> {{ active_model.version_number }}</li>
                             <li class="list-group-item"><strong>Creation & Evaluation Date:</strong> {{ active_model.created_at|date:"F j, Y, g:i a" }}</li>
                             <li class="list-group-item"><strong>Popularity History Timeframe:</strong> {{ active_model.popularity_timeframe }}</li>
@@ -35,6 +36,9 @@
                             {% if active_model.roc_auc %}
                                 <li class="list-group-item"><strong>ROC AUC:</strong> {{ active_model.roc_auc|floatformat:2 }}</li>
                             {% endif %}
+                            {% if active_model.confusion_matrix %}
+                            <li class="list-group-item"><strong>Confusion Matrix:</strong> {{ active_model.confusion_matrix }}</li>
+                        {% endif %}
                         </ul>
                         <br>
                         <h5>Feature Importance</h5>
@@ -92,6 +96,7 @@
                         <h5>General Information</h5>
                         <ul class="list-group">
                             <li class="list-group-item"><strong>Model Type:</strong> {{ model.model_type }}</li>
+                            <li class="list-group-item"><strong>Parameters:</strong> {{ model.best_parameters }}</li>
                             <li class="list-group-item"><strong>Create Date:</strong> {{ model.created_at|date:"F j, Y, g:i a" }}</li>
                             <li class="list-group-item"><strong>Evaluation Date:</strong> {{ model.evaluation_date|date:"F j, Y, g:i a" }}</li>
                             <li class="list-group-item"><strong>Popularity History Timeframe:</strong> {{ model.popularity_timeframe }}</li>
@@ -105,6 +110,9 @@
                             <li class="list-group-item"><strong>F1 Score:</strong> {{ model.f1_score|floatformat:2 }}</li>
                             {% if model.roc_auc %}
                                 <li class="list-group-item"><strong>ROC AUC:</strong> {{ model.roc_auc|floatformat:2 }}</li>
+                            {% endif %}
+                            {% if model.confusion_matrix %}
+                                <li class="list-group-item"><strong>Confusion Matrix:</strong> {{ model.confusion_matrix }}</li>
                             {% endif %}
                         </ul>
                         <br>

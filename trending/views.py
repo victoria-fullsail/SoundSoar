@@ -1,11 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView
-from .models import Chart, Track, TrackFeatures, TrendModel, FeatureImportance
+from .models import Chart, Track, TrackFeatures, TrendModel, FeatureImportance, PopularityHistory, Playlist
 from .visualizations import generate_top_ten_track_plot, generate_track_attribute_plot, generate_track_popularity_trend_plot
 from django.shortcuts import render
 from .spotify_search import SpotifySearch
-import os
-from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 
 class TrackDetailView(TemplateView):
     template_name = 'trending/track-detail.html'
@@ -136,35 +136,57 @@ def trend_model_info(request):
     return render(request, 'trending/trend-model.html', context)
 
 
-
-
-
 def review(request):
-    # Retrieve a sample TrackFeatures object for display
-    track_features = TrackFeatures.objects.order_by('-updated_at').first()  # Fetch the most recent TrackFeatures
-    tracks = Track.objects.order_by('-updated_at').first()  # Fetch the most recent TrackFeatures
+    # Query for total number of rows for Track
+    total_tracks = Track.objects.count()
+
+    # Retrieve all Spotify playlists (assuming you have a Playlist model)
+    spotify_playlists = Playlist.objects.all()
+
+    # Retrieve the most recently updated Track and TrackFeatures
+    track = Track.objects.order_by('-updated_at').first()
+    track_feature = TrackFeatures.objects.order_by('-updated_at').first()
+
+    # Query for popularity history for the last 30 days for the selected track
+    if track:
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        popularity_history = PopularityHistory.objects.filter(track=track, timestamp__gte=thirty_days_ago)
+    else:
+        popularity_history = []  # If no track is available, set to an empty list
+
+    # Get the most recent TrendModel based on creation date
+    recent_model = TrendModel.objects.latest('created_at')
+
+    # Get feature importances for the most recent model
+    feature_importances = FeatureImportance.objects.filter(trend_model=recent_model).values_list('feature_name', 'importance')
 
     context = {
-        'track_features': track_features,
-        'tracks': tracks
+        'total_tracks': total_tracks,
+        'spotify_playlists': spotify_playlists,
+        'track': track,
+        'track_feature': track_feature,
+        'popularity_history': popularity_history,
+        'feature_importances' : feature_importances
     }
+    
     return render(request, 'trending/ready-review.html', context)
 
+
+import time
 
 def search_spotify(request):
     query = request.GET.get('query', '')
     searcher = SpotifySearch()
 
-    track_data = []  # Initialize an empty list for track data
+    track_data = []
 
-    if query:
-        # Perform the search for tracks using the SpotifySearch class
-        results = searcher.search_tracks(query)
-        track_data = results  # Assign the search results directly to track_data
+ 
+    # Get the basic track data
+    track_data = searcher.search_tracks(query)
 
-    # Create a context dictionary to pass data to the template
+
     context = {
-        'track_data': track_data,  # Pass the track data to the template
+        'track_data': track_data,
         'query': query,
     }
 

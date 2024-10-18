@@ -77,7 +77,7 @@ def train_and_evaluate_models():
     models = {
         'RandomForest': RandomForestClassifier(random_state=42, class_weight='balanced'),
         'HistGradientBoosting': HistGradientBoostingClassifier(random_state=42),
-        'LogisticRegression': LogisticRegression(random_state=42, class_weight='balanced', max_iter=1500, warm_start=True),
+        'LogisticRegression': LogisticRegression(random_state=42, class_weight='balanced', max_iter=1000, warm_start=True),
         'SVM': SVC(random_state=42),
         'LDA': LinearDiscriminantAnalysis(),
         'ExtraTrees': ExtraTreesClassifier(random_state=42, class_weight='balanced'),
@@ -87,37 +87,51 @@ def train_and_evaluate_models():
     # Define the parameter grids for each model
     param_grids = {
         'RandomForest': {
-            'n_estimators': [100, 200, 300],
-            'max_depth': [10, 20, 30],
-            'min_samples_split': [2, 5, 10]
+            'n_estimators': [100, 200],
+            'max_depth': [None, 20],
+            'min_samples_leaf': [1, 2],
+            'max_features': ['sqrt'],
+            'bootstrap': [True],
+            'criterion': ['gini', 'entropy']
         },
         'HistGradientBoosting': {
-            'max_iter': [100, 200, 300],
+            'max_iter': [100, 200],
             'learning_rate': [0.01, 0.1],
-            'max_depth': [3, 5, 7]
+            'max_depth': [None, 5],
+            'min_samples_leaf': [1],
+            'max_bins': [255],
+            'l2_regularization': [0, 0.1],
+            'early_stopping': [True],
         },
         'LogisticRegression': {
-            'C': [0.01, 0.1, 1, 10, 50, 100, 500],
+            'C': [500, 700, 900],
             'penalty': ['l2'],
-            'solver': ['lbfgs', 'saga', 'newton-cg']
+            'solver': ['saga', 'liblinear', 'lbfgs'],
+            'intercept_scaling': [1, 5],
+            'fit_intercept': [True, False]
         },
         'SVM': {
-            'C': [0.1, 1, 10],
+            'C': [3, 5, 10],
             'gamma': ['scale', 'auto'],
-            'kernel': ['linear', 'rbf', 'poly']
+            'kernel': ['rbf', 'linear', 'poly'],
         },
         'LDA': {
-            'solver': ['svd', 'lsqr', 'eigen']
+            'solver': ['svd', 'lsqr', 'eigen'], 
+            'priors': [None, [0.5, 0.5], [0.3, 0.7]]
         },
         'ExtraTrees': {
-            'n_estimators': [100, 200, 300],
-            'max_depth': [10, 20, 30],
-            'min_samples_split': [2, 5, 10]
+            'n_estimators': [100, 200],
+            'min_samples_leaf': [1, 2],
+            'max_features': ['sqrt'],
+            'bootstrap': [True, False],
+            'criterion': ['gini', 'entropy']
         },
         'KNN': {
-            'n_neighbors': [3, 5, 7, 9],
-            'weights': ['uniform', 'distance'],
-            'algorithm': ['auto', 'ball_tree', 'kd_tree', 'brute']
+            'n_neighbors': [11, 15, 21],
+            'weights': ['distance'],
+            'algorithm': ['auto'],
+            'leaf_size': [5, 10, 20],
+            'metric': ['euclidean', 'manhattan']
         }
     }
 

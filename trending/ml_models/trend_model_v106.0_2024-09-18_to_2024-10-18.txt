@@ -1,0 +1,40 @@
+# Model Version: v106.0
+
+## Model Type: LDA
+
+## Best Parameters
+```
+solver: svd
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.69375
+- **Precision**: 0.529125
+- **Recall**: 0.69375
+- **F1 Score**: 0.5869047619047618
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[102,   0,   0],
+ [ 40,   0,   1],
+ [  8,   0,   9]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

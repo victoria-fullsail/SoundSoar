@@ -1,0 +1,40 @@
+# Model Version: v111.0
+
+## Model Type: LogisticRegression
+
+## Best Parameters
+```
+C: 700, penalty: l2, solver: liblinear
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.725
+- **Precision**: 0.691616847826087
+- **Recall**: 0.725
+- **F1 Score**: 0.6972075591216216
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[93,  9,  0],
+ [25, 11,  5],
+ [ 2,  3, 12]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

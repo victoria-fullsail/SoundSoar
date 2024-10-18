@@ -1,0 +1,40 @@
+# Model Version: v82.0
+
+## Model Type: RandomForest
+
+## Best Parameters
+```
+max_depth: 20, min_samples_split: 5, n_estimators: 100
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.8375
+- **Precision**: 0.8465075476694915
+- **Recall**: 0.8375
+- **F1 Score**: 0.8304175891333425
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[97,  5,  0],
+ [14, 27,  0],
+ [ 7,  0, 10]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.
