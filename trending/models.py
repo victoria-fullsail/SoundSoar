@@ -321,13 +321,22 @@ class TrendModel(models.Model):
     model_file = models.FileField(upload_to='trending/trend_model/models/', null=True, blank=True)
     readme_file = models.FileField(upload_to='trending/trend_model/readme/', null=True, blank=True)
     evaluation_date = models.DateTimeField(default=timezone.now)
+    popularity_timeframe = models.CharField(max_length=40, blank=True, null=True)
+
+    def _get_historical_dates(self):
+        """Calculate the start and end dates for the historical data (last 30 days)."""
+        end_date = self.created_at
+        start_date = end_date - timedelta(days=30)
+        return start_date, end_date
+
+    def calculate_popularity_timeframe(self):
+        """Calculate the popularity timeframe string."""
+        start_date, end_date = self._get_historical_dates()
+        return f"{start_date.strftime('%m/%d/%Y')} - {end_date.strftime('%m/%d/%Y')}"
 
     def generate_filename(self, file_type='csv'):
-        # Get the start and end dates for the historical data (last 30 days)
-        end_date = self.created_at.date()
-        start_date = end_date - timedelta(days=30)
-
-        # Format the filename
+        """Generate a filename for the trend model based on the version number and date range."""
+        start_date, end_date = self._get_historical_dates()
         return f"trend_model_{self.version_number}_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.{file_type}"
 
     def save(self, *args, **kwargs):
@@ -343,7 +352,9 @@ class TrendModel(models.Model):
                     self.version_number = proposed_version
                 else:
                     self.version_number = 'v1.0'
-        
+
+        self.popularity_timeframe = self.calculate_popularity_timeframe()
+
         super().save(*args, **kwargs)
 
 

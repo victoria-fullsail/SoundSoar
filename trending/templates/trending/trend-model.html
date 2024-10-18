@@ -1,19 +1,10 @@
 {% extends 'core/base.html' %}
 {% load static %}
+{% load my_filters %}
 {% block content %}
 <div class="container mt-5">
-    <h1>Data for Debugging</h1>
-    <div>
-        <p>Active FI: {{ feature_importance_active|dictsort:"0" }}</p>
-        <p>Inactive FI: {{ feature_importance_inactive|dictsort:"0" }}</p>
-        <p>Active CSV: {{ csv_file_exists_active|dictsort:"0" }}</p>
-        <p>Inactive CSV: {{ csv_file_exists_inactive|dictsort:"0" }}</p>
-    </div>
-</div>
-
-<div class="container mt-5">
     <h1>Active Trend Model Information</h1>
-
+    <br>
     {% if active_models %}
     <div id="accordionActive">
         {% for active_model in active_models %}
@@ -25,12 +16,16 @@
                         </button>
                     </h2>
                 </div>
-
                 <div id="collapseActive{{ forloop.counter }}" class="collapse" aria-labelledby="headingActive{{ forloop.counter }}" data-parent="#accordionActive">
                     <div class="card-body">
-                        <p><strong>Created At:</strong> {{ active_model.created_at|date:"F j, Y, g:i a" }}</p>
-                        <p><strong>Evaluation Date:</strong> {{ active_model.evaluation_date|date:"F j, Y, g:i a" }}</p>
-
+                        <h5>General Information</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Model Type:</strong> {{ active_model.model_type }}</li>
+                            <li class="list-group-item"><strong>Version Number:</strong> {{ active_model.version_number }}</li>
+                            <li class="list-group-item"><strong>Creation & Evaluation Date:</strong> {{ active_model.created_at|date:"F j, Y, g:i a" }}</li>
+                            <li class="list-group-item"><strong>Popularity History Timeframe:</strong> {{ active_model.popularity_timeframe }}</li>
+                        </ul>
+                        <br>
                         <h5>Performance Metrics</h5>
                         <ul class="list-group">
                             <li class="list-group-item"><strong>Accuracy:</strong> {{ active_model.accuracy|floatformat:2 }}</li>
@@ -41,22 +36,30 @@
                                 <li class="list-group-item"><strong>ROC AUC:</strong> {{ active_model.roc_auc|floatformat:2 }}</li>
                             {% endif %}
                         </ul>
-
+                        <br>
                         <h5>Feature Importance</h5>
-                        <ul class="list-group">
-                            {% for feature in feature_importance_active.active_model.id %}
-                                <li class="list-group-item">{{ feature.feature_name }}: {{ feature.importance|floatformat:2 }}</li>
-                            {% empty %}
-                                <li class="list-group-item">No feature importance data available.</li>
-                            {% endfor %}
-                        </ul>
-
-                        <h5>CSV File Existence</h5>
-                        <p>
-                            {% if csv_file_exists_active.active_model.id %}
-                                The CSV file exists.
+                        <ul>
+                            {% if feature_importance_active and feature_importance_active|get_item:active_model.id %}
+                                {% for feature in feature_importance_active|get_item:active_model.id %}
+                                    <li>{{ feature }}</li>
+                                {% empty %}
+                                    <li>No feature importance data available.</li>
+                                {% endfor %}
                             {% else %}
-                                The CSV file does not exist.
+                                <li>No feature importance data available.</li>
+                            {% endif %}
+                        </ul>
+                        <br>
+                        <h5>File Downloads</h5>
+                        <p>
+                            {% if active_model.csv_data %}
+                                <a href="{{ active_model.csv_data.url }}" class="btn btn-primary" download>Download CSV</a>
+                            {% endif %}
+                            {% if active_model.model_file %}
+                                <a href="{{ active_model.model_file.url }}" class="btn btn-primary" download>Download Model File (pkl)</a>
+                            {% endif %}
+                            {% if active_model.readme_file %}
+                                <a href="{{ active_model.readme_file.url }}" class="btn btn-primary" download>Download README TXT</a>
                             {% endif %}
                         </p>
                     </div>
@@ -71,7 +74,7 @@
 
 <div class="container mt-5">
     <h1>Trend Model History</h1>
-
+    <br>
     {% if inactive_models %}
     <div id="accordionInactive">
         {% for model in inactive_models %}
@@ -86,9 +89,14 @@
 
                 <div id="collapseInactive{{ forloop.counter }}" class="collapse" aria-labelledby="headingInactive{{ forloop.counter }}" data-parent="#accordionInactive">
                     <div class="card-body">
-                        <p><strong>Created At:</strong> {{ model.created_at|date:"F j, Y, g:i a" }}</p>
-                        <p><strong>Evaluation Date:</strong> {{ model.evaluation_date|date:"F j, Y, g:i a" }}</p>
-                        
+                        <h5>General Information</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Model Type:</strong> {{ model.model_type }}</li>
+                            <li class="list-group-item"><strong>Create Date:</strong> {{ model.created_at|date:"F j, Y, g:i a" }}</li>
+                            <li class="list-group-item"><strong>Evaluation Date:</strong> {{ model.evaluation_date|date:"F j, Y, g:i a" }}</li>
+                            <li class="list-group-item"><strong>Popularity History Timeframe:</strong> {{ model.popularity_timeframe }}</li>
+                        </ul>
+                        <br>
                         <h5>Performance Metrics</h5>
                         <ul class="list-group">
                             <li class="list-group-item"><strong>Accuracy:</strong> {{ model.accuracy|floatformat:2 }}</li>
@@ -99,22 +107,31 @@
                                 <li class="list-group-item"><strong>ROC AUC:</strong> {{ model.roc_auc|floatformat:2 }}</li>
                             {% endif %}
                         </ul>
-
+                        <br>
                         <h5>Feature Importance</h5>
-                        <ul class="list-group">
-                            {% for feature in feature_importance_inactive.model.id %}
-                                <li class="list-group-item">{{ feature.feature_name }}: {{ feature.importance|floatformat:2 }}</li>
-                            {% empty %}
-                                <li class="list-group-item">No feature importance data available.</li>
-                            {% endfor %}
-                        </ul>
-
-                        <h5>CSV File Existence</h5>
-                        <p>
-                            {% if csv_file_exists_inactive.model.id %}
-                                The CSV file exists.
+                        <ul>
+                            {% if feature_importance_inactive and feature_importance_inactive|get_item:model.id %}
+                                {% for feature in feature_importance_inactive|get_item:model.id %}
+                                    <li>{{ feature }}</li>
+                                {% empty %}
+                                    <li>No feature importance data available.</li>
+                                {% endfor %}
                             {% else %}
-                                The CSV file does not exist.
+                                <li>No feature importance data available.</li>
+                            {% endif %}
+                        </ul>
+                        
+                        <br>
+                        <h5>File Downloads</h5>
+                        <p>
+                            {% if model.csv_data %}
+                                <a href="{{ model.csv_data.url }}" class="btn btn-primary" download>Download CSV</a>
+                            {% endif %}
+                            {% if model.model_file %}
+                                <a href="{{ model.model_file.url }}" class="btn btn-primary" download>Download Model File (pkl)</a>
+                            {% endif %}
+                            {% if model.readme_file %}
+                                <a href="{{ model.readme_file.url }}" class="btn btn-primary" download>Download README TXT</a>
                             {% endif %}
                         </p>
                     </div>
@@ -126,4 +143,4 @@
         <p>No inactive models found.</p>
     {% endif %}
 </div>
-{% endblock content %}
+{% endblock %}
