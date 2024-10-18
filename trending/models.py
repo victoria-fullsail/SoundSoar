@@ -6,8 +6,8 @@ import pandas as pd
 from .use_trend_model import load_active_model 
 import numpy as np
 import pandas as pd
-from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
+from django.db import transaction, IntegrityError
 
 class Chart(models.Model):
     CHART_TYPE_CHOICES = [
@@ -111,7 +111,6 @@ class TrackFeatures(models.Model):
         return f"Features for {self.track.name}"
 
     def calculate_velocity(self):
-        # Assuming you have a method to get historical popularity data
         historical_popularity = self.get_historical_popularity()
         if len(historical_popularity) < 2:
             self.velocity = 0
@@ -122,17 +121,14 @@ class TrackFeatures(models.Model):
         self.velocity = rate_of_change
 
     def calculate_mean(self):
-        # Assuming you have a method to get historical popularity data
         historical_popularity = self.get_historical_popularity()
         self.mean_popularity = np.mean(historical_popularity) if historical_popularity else None
 
     def calculate_median(self):
-        # Assuming you have a method to get historical popularity data
         historical_popularity = self.get_historical_popularity()
         self.median_popularity = np.median(historical_popularity) if historical_popularity else None
 
     def calculate_std(self):
-        # Assuming you have a method to get historical popularity data
         historical_popularity = self.get_historical_popularity()
         self.std_popularity = np.std(historical_popularity) if historical_popularity else None
 
@@ -309,26 +305,47 @@ class TrendModel(models.Model):
         ('RandomForest', 'RandomForest'), 
         ('HistGradientBoost', 'HistGradientBoost'),
         ('LogisticRegression', 'LogisticRegression'),
-        ('SVM', 'SVM')  
+        ('SVM', 'SVM'),
+        ('LDA', 'LDA'),
+        ('ExtraTrees', 'ExtraTrees'),
+        ('KNN', 'KNN'),
     ])
     accuracy = models.FloatField(blank=True, null=True)
     precision = models.FloatField(blank=True, null=True)
     recall = models.FloatField(blank=True, null=True)
     f1_score = models.FloatField(blank=True, null=True)
     roc_auc = models.FloatField(null=True, blank=True)
+    best_parameters = models.TextField(blank=True, null=True)
+    confusion_matrix = models.TextField(blank=True, null=True)
+    csv_data = models.FileField(upload_to='trending/trend_model/csv_data/', null=True, blank=True)
+    model_file = models.FileField(upload_to='trending/trend_model/models/', null=True, blank=True)
+    readme_file = models.FileField(upload_to='trending/trend_model/readme/', null=True, blank=True)
     evaluation_date = models.DateTimeField(default=timezone.now)
 
+    def generate_filename(self, file_type='csv'):
+        # Get the start and end dates for the historical data (last 30 days)
+        end_date = self.created_at.date()
+        start_date = end_date - timedelta(days=30)
+
+        # Format the filename
+        return f"trend_model_{self.version_number}_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.{file_type}"
+
     def save(self, *args, **kwargs):
-        # Automatically generate a unique version number if not set
         if not self.version_number:
-            last_model = TrendModel.objects.order_by('created_at').last()
-            if last_model and last_model.version_number:
-                last_version_num = int(last_model.version_number.split('.')[0][1:])
-                self.version_number = f'v{last_version_num + 1}.0'
-            else:
-                # If this is the first version, start with 'v1.0'
-                self.version_number = 'v1.0'
+            with transaction.atomic():
+                last_model = TrendModel.objects.order_by('created_at').last()
+                if last_model and last_model.version_number:
+                    last_version_num = int(last_model.version_number.split('.')[0][1:])
+                    proposed_version = f'v{last_version_num + 1}.0'
+                    while TrendModel.objects.filter(version_number=proposed_version).exists():
+                        last_version_num += 1
+                        proposed_version = f'v{last_version_num}.0'
+                    self.version_number = proposed_version
+                else:
+                    self.version_number = 'v1.0'
+        
         super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"Version {self.version_number} - {self.model_type} ({'Active' if self.is_active else 'Inactive'})"
@@ -342,6 +359,14 @@ class TrendModel(models.Model):
         """Deactivate this model."""
         self.is_active = False
         self.save()
+
+class FeatureImportance(models.Model):
+    trend_model = models.ForeignKey(TrendModel, on_delete=models.CASCADE, related_name='feature_importances')
+    feature_name = models.CharField(max_length=50)
+    importance = models.FloatField()
+
+    def __str__(self):
+            return f"Feature Importance of {self.feature_name} for {self.trend_model}."
 
 class PredictionHistory(models.Model):
     trend_model = models.ForeignKey(TrendModel, on_delete=models.CASCADE, related_name='predictions')

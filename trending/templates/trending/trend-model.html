@@ -1,24 +1,37 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% block content %}
-    <!-- Active Models Section -->
-    <div class="container mt-5">
-        <h1>Active Trend Model Information</h1>
+<div class="container mt-5">
+    <h1>Data for Debugging</h1>
+    <div>
+        <p>Active FI: {{ feature_importance_active|dictsort:"0" }}</p>
+        <p>Inactive FI: {{ feature_importance_inactive|dictsort:"0" }}</p>
+        <p>Active CSV: {{ csv_file_exists_active|dictsort:"0" }}</p>
+        <p>Inactive CSV: {{ csv_file_exists_inactive|dictsort:"0" }}</p>
+    </div>
+</div>
 
-        {% if active_models %}
-        <div>
-            {% for active_model in active_models %}
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Model: {{ active_model.model_type }}</h2>
-                        <p>Version: {{ active_model.version_number }}</p>
-                    </div>
+<div class="container mt-5">
+    <h1>Active Trend Model Information</h1>
+
+    {% if active_models %}
+    <div id="accordionActive">
+        {% for active_model in active_models %}
+            <div class="card mb-3">
+                <div class="card-header" id="headingActive{{ forloop.counter }}">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapseActive{{ forloop.counter }}" aria-expanded="true" aria-controls="collapseActive{{ forloop.counter }}">
+                            Model: {{ active_model.model_type }} (Version: {{ active_model.version_number }})
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="collapseActive{{ forloop.counter }}" class="collapse" aria-labelledby="headingActive{{ forloop.counter }}" data-parent="#accordionActive">
                     <div class="card-body">
-                        <p><strong>Description:</strong> {{ active_model.description }}</p>
                         <p><strong>Created At:</strong> {{ active_model.created_at|date:"F j, Y, g:i a" }}</p>
                         <p><strong>Evaluation Date:</strong> {{ active_model.evaluation_date|date:"F j, Y, g:i a" }}</p>
-                        
-                        <h4>Performance Metrics</h4>
+
+                        <h5>Performance Metrics</h5>
                         <ul class="list-group">
                             <li class="list-group-item"><strong>Accuracy:</strong> {{ active_model.accuracy|floatformat:2 }}</li>
                             <li class="list-group-item"><strong>Precision:</strong> {{ active_model.precision|floatformat:2 }}</li>
@@ -28,48 +41,89 @@
                                 <li class="list-group-item"><strong>ROC AUC:</strong> {{ active_model.roc_auc|floatformat:2 }}</li>
                             {% endif %}
                         </ul>
+
+                        <h5>Feature Importance</h5>
+                        <ul class="list-group">
+                            {% for feature in feature_importance_active.active_model.id %}
+                                <li class="list-group-item">{{ feature.feature_name }}: {{ feature.importance|floatformat:2 }}</li>
+                            {% empty %}
+                                <li class="list-group-item">No feature importance data available.</li>
+                            {% endfor %}
+                        </ul>
+
+                        <h5>CSV File Existence</h5>
+                        <p>
+                            {% if csv_file_exists_active.active_model.id %}
+                                The CSV file exists.
+                            {% else %}
+                                The CSV file does not exist.
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
-            {% endfor %}
-        </div>
-        {% else %}
-            <p>No active models found.</p>
-        {% endif %}
-    </div>
-
-    <!-- Inactive Models Section -->
-    <div class="container mt-5">
-        <h1>Trend Model History</h1>
-
-        {% if inactive_models %}
-            <div class="list-group">
-                {% for model in inactive_models %}
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h2>Model: {{ model.model_type }}</h2>
-                            <p>Version: {{ model.version_number }}</p>
-                        </div>
-                        <div class="card-body">
-                            <p><strong>Description:</strong> {{ model.description }}</p>
-                            <p><strong>Created At:</strong> {{ model.created_at|date:"F j, Y, g:i a" }}</p>
-                            <p><strong>Evaluation Date:</strong> {{ model.evaluation_date|date:"F j, Y, g:i a" }}</p>
-                            <h4>Performance Metrics</h4>
-                            <ul class="list-group">
-                                <li class="list-group-item"><strong>Accuracy:</strong> {{ model.accuracy|floatformat:2 }}</li>
-                                <li class="list-group-item"><strong>Precision:</strong> {{ model.precision|floatformat:2 }}</li>
-                                <li class="list-group-item"><strong>Recall:</strong> {{ model.recall|floatformat:2 }}</li>
-                                <li class="list-group-item"><strong>F1 Score:</strong> {{ model.f1_score|floatformat:2 }}</li>
-                                {% if model.roc_auc %}
-                                    <li class="list-group-item"><strong>ROC AUC:</strong> {{ model.roc_auc|floatformat:2 }}</li>
-                                {% endif %}
-                            </ul>
-                        </div>
-                    </div>
-                {% endfor %}
             </div>
-        {% else %}
-            <p>No inactive models found.</p>
-        {% endif %}
+        {% endfor %}
     </div>
+    {% else %}
+        <p>No active models found.</p>
+    {% endif %}
+</div>
 
+<div class="container mt-5">
+    <h1>Trend Model History</h1>
+
+    {% if inactive_models %}
+    <div id="accordionInactive">
+        {% for model in inactive_models %}
+            <div class="card mb-3">
+                <div class="card-header" id="headingInactive{{ forloop.counter }}">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapseInactive{{ forloop.counter }}" aria-expanded="true" aria-controls="collapseInactive{{ forloop.counter }}">
+                            Model: {{ model.model_type }} (Version: {{ model.version_number }})
+                        </button>
+                    </h2>
+                </div>
+
+                <div id="collapseInactive{{ forloop.counter }}" class="collapse" aria-labelledby="headingInactive{{ forloop.counter }}" data-parent="#accordionInactive">
+                    <div class="card-body">
+                        <p><strong>Created At:</strong> {{ model.created_at|date:"F j, Y, g:i a" }}</p>
+                        <p><strong>Evaluation Date:</strong> {{ model.evaluation_date|date:"F j, Y, g:i a" }}</p>
+                        
+                        <h5>Performance Metrics</h5>
+                        <ul class="list-group">
+                            <li class="list-group-item"><strong>Accuracy:</strong> {{ model.accuracy|floatformat:2 }}</li>
+                            <li class="list-group-item"><strong>Precision:</strong> {{ model.precision|floatformat:2 }}</li>
+                            <li class="list-group-item"><strong>Recall:</strong> {{ model.recall|floatformat:2 }}</li>
+                            <li class="list-group-item"><strong>F1 Score:</strong> {{ model.f1_score|floatformat:2 }}</li>
+                            {% if model.roc_auc %}
+                                <li class="list-group-item"><strong>ROC AUC:</strong> {{ model.roc_auc|floatformat:2 }}</li>
+                            {% endif %}
+                        </ul>
+
+                        <h5>Feature Importance</h5>
+                        <ul class="list-group">
+                            {% for feature in feature_importance_inactive.model.id %}
+                                <li class="list-group-item">{{ feature.feature_name }}: {{ feature.importance|floatformat:2 }}</li>
+                            {% empty %}
+                                <li class="list-group-item">No feature importance data available.</li>
+                            {% endfor %}
+                        </ul>
+
+                        <h5>CSV File Existence</h5>
+                        <p>
+                            {% if csv_file_exists_inactive.model.id %}
+                                The CSV file exists.
+                            {% else %}
+                                The CSV file does not exist.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No inactive models found.</p>
+    {% endif %}
+</div>
 {% endblock content %}

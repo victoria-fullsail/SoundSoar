@@ -127,11 +127,9 @@ def main():
         high_freq_sync_track_data_task()
     elif args.function == 'medium_freq':
         medium_freq_sync_track_data_task()
-        print('models...')
     elif args.function == 'update_models':
         update_trend_models()
     elif args.function == 'update_predictions':
-        print('predictions...')
         update_all_track_features_predictions()
     elif args.function == 'update_custom_playlist':
         update_custom_playlist()

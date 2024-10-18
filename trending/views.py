@@ -1,10 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView
-from .models import Chart, Track, TrackFeatures, TrendModel
+from .models import Chart, Track, TrackFeatures, TrendModel, FeatureImportance
 from .visualizations import generate_top_ten_track_plot, generate_track_attribute_plot, generate_track_popularity_trend_plot
 from django.shortcuts import render
 from .spotify_search import SpotifySearch
-
+import os
+from django.conf import settings
 
 class TrackDetailView(TemplateView):
     template_name = 'trending/track-detail.html'
@@ -107,12 +108,43 @@ def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
     return render(request, 'trending/trending.html', context)
 
 
+from .models import FeatureImportance
+
 def trend_model_info(request):
     active_models = TrendModel.objects.filter(is_active=True).order_by('-created_at')
     inactive_models = TrendModel.objects.filter(is_active=False).order_by('-created_at')
+
+    # Active Models - Features and CSV
+    feature_importance_active = {}
+    csv_file_exists_active = {}
+
+    for active_model in active_models:
+        # Fetch feature importances from the FeatureImportance model for the active model
+        feature_importance_active[active_model.id] = FeatureImportance.objects.filter(trend_model=active_model).values_list('feature_name', 'importance')
+
+        # Check if CSV file exists
+        csv_file_path = os.path.join(settings.BASE_DIR, f'trending/ml_models/{active_model.version_number}_data.csv')
+        csv_file_exists_active[active_model.id] = os.path.isfile(csv_file_path)
+
+    # Inactive Models - Features and CSV
+    feature_importance_inactive = {}
+    csv_file_exists_inactive = {}
+
+    for inactive_model in inactive_models:
+        # Fetch feature importances from the FeatureImportance model for the inactive model
+        feature_importance_inactive[inactive_model.id] = FeatureImportance.objects.filter(trend_model=inactive_model).values_list('feature_name', 'importance')
+
+        # Check if CSV file exists
+        csv_file_path = os.path.join(settings.BASE_DIR, f'trending/ml_models/{inactive_model.version_number}_data.csv')
+        csv_file_exists_inactive[inactive_model.id] = os.path.isfile(csv_file_path)
+
     context = {
         'active_models': active_models,
         'inactive_models': inactive_models,
+        'feature_importance_active': feature_importance_active,
+        'feature_importance_inactive': feature_importance_inactive,
+        'csv_file_exists_active': csv_file_exists_active,
+        'csv_file_exists_inactive': csv_file_exists_inactive,
     }
     return render(request, 'trending/trend-model.html', context)
 
