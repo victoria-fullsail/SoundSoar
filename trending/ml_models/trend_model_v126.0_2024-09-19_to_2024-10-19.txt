@@ -1,0 +1,40 @@
+# Model Version: v126.0
+
+## Model Type: SVM
+
+## Best Parameters
+```
+C: 3, gamma: scale, kernel: rbf
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.78125
+- **Precision**: 0.7877948923499771
+- **Recall**: 0.78125
+- **F1 Score**: 0.7699102904309794
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[28, 21,  0],
+ [ 8, 92,  0],
+ [ 1,  5,  5]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

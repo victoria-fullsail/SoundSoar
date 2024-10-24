@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from django.db import transaction
+from collections import Counter
 
 class Chart(models.Model):
     CHART_TYPE_CHOICES = [
@@ -345,13 +346,15 @@ class TrackFeatures(models.Model):
 
 class TrendModel(models.Model):
     version_number = models.CharField(max_length=25, unique=True, blank=True)
+    model_order = models.IntegerField(blank=True, null=True)
+    phase_number = models.IntegerField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     is_active = models.BooleanField(default=False)
     is_best = models.BooleanField(default=False)
     model_type = models.CharField(max_length=25, choices=[
         ('RandomForest', 'RandomForest'), 
-        ('HistGradientBoost', 'HistGradientBoost'),
+        ('HistGradientBoosting', 'HistGradientBoosting'),
         ('LogisticRegression', 'LogisticRegression'),
         ('SVM', 'SVM'),
         ('LDA', 'LDA'),
@@ -371,6 +374,55 @@ class TrendModel(models.Model):
     evaluation_date = models.DateTimeField(default=timezone.now)
     popularity_timeframe = models.CharField(max_length=40, blank=True, null=True)
 
+    @staticmethod
+    def get_parameters_count_list_for_type(model_type='RandomForest'):
+        models = TrendModel.objects.filter(model_type=model_type).exclude(best_parameters__isnull=True).exclude(best_parameters__exact='')
+
+        if not models.exists():
+            return []  # Return an empty list if no models with best parameters exist
+
+        # Extract all best_parameters into a list
+        parameter_list = [model.best_parameters for model in models]
+
+        # Use Counter to count the occurrences
+        parameter_counter = Counter(parameter_list)
+
+        # Convert the counter to a list of tuples (parameter, count) sorted by count
+        parameter_count_list = parameter_counter.most_common()
+
+        return parameter_count_list
+  
+    @staticmethod
+    def get_average_score_for_type(model_type='RandomForest', metric='accuracy'):
+        models = TrendModel.objects.filter(model_type=model_type)
+
+        if not models.exists():
+            return 0.0  # Return 0 if there are no models of this type
+
+        total_score = 0.0
+        count = 0
+
+        for model in models:
+            if metric == 'accuracy' and model.accuracy is not None:
+                total_score += model.accuracy
+                count += 1
+            elif metric == 'precision' and model.precision is not None:
+                total_score += model.precision
+                count += 1
+            elif metric == 'recall' and model.recall is not None:
+                total_score += model.recall
+                count += 1
+            elif metric == 'f1_score' and model.f1_score is not None:
+                total_score += model.f1_score
+                count += 1
+            # Add other metrics here if needed
+
+        if count == 0:
+            return 0.0  # Return 0 if no valid scores were found
+
+        average_score = total_score / count
+        return average_score
+             
     def _get_historical_dates(self):
         """Calculate the start and end dates for the historical data (last 30 days)."""
         end_date = self.created_at
@@ -387,7 +439,25 @@ class TrendModel(models.Model):
         start_date, end_date = self._get_historical_dates()
         return f"trend_model_{self.version_number}_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.{file_type}"
 
+    def calculate_phase_order_string(self):
+        if self.phase_number and self.model_order:
+            return f"{self.phase_number}.{self.model_order}"
+        else:
+            return 'Not Available'
+        
+    @staticmethod
+    def calculate_new_phase():
+        # Get the last phase number, if it exists
+        last_phase = TrendModel.objects.filter(phase_number__isnull=False).order_by('-phase_number').first()
+        
+        if last_phase:
+            # Increment the last phase number by 1 for the new instance
+            return last_phase.phase_number + 1
+        
+        return 1
+
     def save(self, *args, **kwargs):
+        # Version Number
         if not self.version_number:
             with transaction.atomic():
                 last_model = TrendModel.objects.order_by('created_at').last()
@@ -401,10 +471,10 @@ class TrendModel(models.Model):
                 else:
                     self.version_number = 'v1.0'
 
+        # Set Popularity History Timeframe
         self.popularity_timeframe = self.calculate_popularity_timeframe()
 
         super().save(*args, **kwargs)
-
 
     def __str__(self):
         return f"Version {self.version_number} - {self.model_type} ({'Active' if self.is_active else 'Inactive'})"

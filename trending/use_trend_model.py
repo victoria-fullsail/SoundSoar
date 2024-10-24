@@ -27,13 +27,6 @@ def load_active_model(active_model):
     # Load the model
     model, feature_names, imputer = joblib.load(model_file_path)
 
-    # Retrieve expected feature names
-    feature_names2 = [
-        'track__valence', 'track__tempo', 'track__speechiness', 
-        'track__danceability', 'track__liveness', 'velocity', 
-        'current_popularity', 'median_popularity', 'mean_popularity', 
-        'std_popularity', 'retrieval_frequency'
-    ]
     print('exiting load active model')
     return model, feature_names, imputer
 

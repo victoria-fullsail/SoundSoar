@@ -107,6 +107,9 @@ def update_active_models():
     # Deactivate all models
     TrendModel.objects.update(is_active=False)
 
+    # Calculate New Phase
+    new_phase =TrendModel.calculate_new_phase()
+
     # Find the best model from results based on accuracy
     best_model_name = max(results, key=lambda name: results[name]['accuracy'])
     best_model_results = results[best_model_name]
@@ -122,7 +125,9 @@ def update_active_models():
         description=f'Best performing model: {best_model_name}',
         best_parameters=best_model_results['best_params'],
         confusion_matrix=str(best_model_results['confusion_matrix']),
-        is_best=True
+        is_best=True,
+        model_order=0,
+        phase_number=new_phase
     )
     new_version.activate()
 
@@ -138,6 +143,7 @@ def update_active_models():
     # Generate Read Me File
     create_readme_file(new_version, feature_names)
 
+    m_num = 1
     # Save other models
     for model_name, model in all_trained_models.items():
         if model_name != best_model_name:  # Exclude the best model
@@ -152,10 +158,12 @@ def update_active_models():
                 description=f'Other model: {model_name}',
                 best_parameters=model_results['best_params'],  # Use correct results variable
                 confusion_matrix=str(model_results['confusion_matrix']),
-                is_best=False  # Not the best model
+                is_best=False,  # Not the best model
+                model_order=m_num,
+                phase_number=new_phase
             )
             new_version.activate()
-
+            m_num += 1
             # Save the model with version number
             save_model_with_version(model, new_version.version_number, imputer, feature_names, new_version)
         

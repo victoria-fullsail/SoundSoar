@@ -73,6 +73,16 @@
                                     <i class="fa-solid fa-user"></i>
                                     <a href="{% url 'userpref:preferences' %}">Account Settings</a>
                                 </div>
+                                <br>
+                                <div class="modal-line">
+                                    <i class="fa-solid fa-database"></i>
+                                    <a href="{% url 'trending:trend_model_info' %}">Trend Model History</a>
+                                </div>
+                                <div class="modal-line">
+                                    <i class="fa-solid fa-circle-info"></i>
+                                    <a href="{% url 'trending:review' %}">Trend Insights & Review</a>
+                                </div>
+                                <br><br><br>
                                 <!-- LOGOUT BUTTON -->
                                     {% if user.is_authenticated %}
                                     <!-- Sign-out button for logged-in users -->

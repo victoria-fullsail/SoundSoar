@@ -1,0 +1,40 @@
+# Model Version: v127.0
+
+## Model Type: LDA
+
+## Best Parameters
+```
+priors: None, solver: lsqr
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.7
+- **Precision**: 0.7230769230769231
+- **Recall**: 0.7
+- **F1 Score**: 0.6446236559139785
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[10, 39,  0],
+ [ 3, 96,  1],
+ [ 0,  5,  6]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

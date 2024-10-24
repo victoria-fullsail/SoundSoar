@@ -1,10 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView
+from django.utils import timezone
 from .models import Chart, Track, TrackFeatures, TrendModel, FeatureImportance, PopularityHistory, Playlist
 from .visualizations import generate_top_ten_track_plot, generate_track_attribute_plot, generate_track_popularity_trend_plot
-from django.shortcuts import render
 from .spotify_search import SpotifySearch
-from django.utils import timezone
 from datetime import timedelta
 
 class TrackDetailView(TemplateView):
@@ -45,7 +44,6 @@ class TrackDetailView(TemplateView):
 
         return context
 
-
 def trending(request):
     # Fetch the most recent spotify chart
     most_recent_chart = Chart.objects.filter(chart_type='spotify_playlist').order_by('created_at').first()
@@ -56,7 +54,6 @@ def trending(request):
     else:
         # Handle the case where no playlists are available
         return render(request, 'trending/trending.html', {'charts': [], 'message': 'No playlists available.'})
-
 
 def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
     # Fetch the chart based on chart_type and chart_name
@@ -107,7 +104,6 @@ def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
 
     return render(request, 'trending/trending.html', context)
 
-
 def trend_model_info(request):
     active_models = TrendModel.objects.filter(is_active=True).order_by('-created_at')
     inactive_models = TrendModel.objects.filter(is_active=False).order_by('-created_at')
@@ -134,7 +130,6 @@ def trend_model_info(request):
         'feature_importance_inactive': feature_importance_inactive,
     }
     return render(request, 'trending/trend-model.html', context)
-
 
 def review(request):
     # Query for total number of rows for Track
@@ -171,8 +166,124 @@ def review(request):
     
     return render(request, 'trending/ready-review.html', context)
 
+def rf_model_info(request):
+    models = TrendModel.objects.filter(model_type='RandomForest').order_by('-created_at')
+    average_accuracy = TrendModel.get_average_score_for_type(model_type='RandomForest', metric='accuracy')
+    average_precision = TrendModel.get_average_score_for_type(model_type='RandomForest', metric='precision')
+    average_recall = TrendModel.get_average_score_for_type(model_type='RandomForest', metric='recall')
+    average_f1_score = TrendModel.get_average_score_for_type(model_type='RandomForest', metric='f1_score')
+    best_params = TrendModel.get_parameters_count_list_for_type(model_type='RandomForest')
+    context = {
+        'models': models,
+        'average_accuracy': average_accuracy,
+        'average_precision': average_precision,
+        'average_recall': average_recall,
+        'average_f1_score': average_f1_score,
+        'best_params': best_params,
+    }
+    return render(request, 'trending/rf-model.html', context)
 
-import time
+def hgb_model_info(request):
+    models = TrendModel.objects.filter(model_type='HistGradientBoosting').order_by('-created_at')
+    average_accuracy = TrendModel.get_average_score_for_type(model_type='HistGradientBoosting', metric='accuracy')
+    average_precision = TrendModel.get_average_score_for_type(model_type='HistGradientBoosting', metric='precision')
+    average_recall = TrendModel.get_average_score_for_type(model_type='HistGradientBoosting', metric='recall')
+    average_f1_score = TrendModel.get_average_score_for_type(model_type='HistGradientBoosting', metric='f1_score')
+    best_params = TrendModel.get_parameters_count_list_for_type(model_type='HistGradientBoosting')
+    context = {
+        'models': models,
+        'average_accuracy': average_accuracy,
+        'average_precision': average_precision,
+        'average_recall': average_recall,
+        'average_f1_score': average_f1_score,
+        'best_params': best_params,
+    }
+    return render(request, 'trending/hgb-model.html', context)
+
+def lr_model_info(request):
+    models = TrendModel.objects.filter(model_type='LogisticRegression').order_by('-created_at')
+    average_accuracy = TrendModel.get_average_score_for_type(model_type='LogisticRegression', metric='accuracy')
+    average_precision = TrendModel.get_average_score_for_type(model_type='LogisticRegression', metric='precision')
+    average_recall = TrendModel.get_average_score_for_type(model_type='LogisticRegression', metric='recall')
+    average_f1_score = TrendModel.get_average_score_for_type(model_type='LogisticRegression', metric='f1_score')
+    best_params = TrendModel.get_parameters_count_list_for_type(model_type='LogisticRegression')
+    context = {
+        'models': models,
+        'average_accuracy': average_accuracy,
+        'average_precision': average_precision,
+        'average_recall': average_recall,
+        'average_f1_score': average_f1_score,
+        'best_params': best_params,
+    }
+    return render(request, 'trending/lr-model.html', context)
+
+def svm_model_info(request):
+    models = TrendModel.objects.filter(model_type='SVM').order_by('-created_at')
+    average_accuracy = TrendModel.get_average_score_for_type(model_type='SVM', metric='accuracy')
+    average_precision = TrendModel.get_average_score_for_type(model_type='SVM', metric='precision')
+    average_recall = TrendModel.get_average_score_for_type(model_type='SVM', metric='recall')
+    average_f1_score = TrendModel.get_average_score_for_type(model_type='SVM', metric='f1_score')
+    best_params = TrendModel.get_parameters_count_list_for_type(model_type='SVM')
+    context = {
+        'models': models,
+        'average_accuracy': average_accuracy,
+        'average_precision': average_precision,
+        'average_recall': average_recall,
+        'average_f1_score': average_f1_score,
+        'best_params': best_params,
+    }
+    return render(request, 'trending/svm-model.html', context)
+
+def lda_model_info(request):
+    models = TrendModel.objects.filter(model_type='LDA').order_by('-created_at')
+    average_accuracy = TrendModel.get_average_score_for_type(model_type='LDA', metric='accuracy')
+    average_precision = TrendModel.get_average_score_for_type(model_type='LDA', metric='precision')
+    average_recall = TrendModel.get_average_score_for_type(model_type='LDA', metric='recall')
+    average_f1_score = TrendModel.get_average_score_for_type(model_type='LDA', metric='f1_score')
+    best_params = TrendModel.get_parameters_count_list_for_type(model_type='LDA')
+    context = {
+        'models': models,
+        'average_accuracy': average_accuracy,
+        'average_precision': average_precision,
+        'average_recall': average_recall,
+        'average_f1_score': average_f1_score,
+        'best_params': best_params,
+    }
+    return render(request, 'trending/lda-model.html', context)
+
+def extra_model_info(request):
+    models = TrendModel.objects.filter(model_type='ExtraTrees').order_by('-created_at')
+    average_accuracy = TrendModel.get_average_score_for_type(model_type='ExtraTrees', metric='accuracy')
+    average_precision = TrendModel.get_average_score_for_type(model_type='ExtraTrees', metric='precision')
+    average_recall = TrendModel.get_average_score_for_type(model_type='ExtraTrees', metric='recall')
+    average_f1_score = TrendModel.get_average_score_for_type(model_type='ExtraTrees', metric='f1_score')
+    best_params = TrendModel.get_parameters_count_list_for_type(model_type='ExtraTrees')
+    context = {
+        'models': models,
+        'average_accuracy': average_accuracy,
+        'average_precision': average_precision,
+        'average_recall': average_recall,
+        'average_f1_score': average_f1_score,
+        'best_params': best_params,
+    }
+    return render(request, 'trending/extra-model.html', context)
+
+def knn_model_info(request):
+    models = TrendModel.objects.filter(model_type='KNN').order_by('-created_at')
+    average_accuracy = TrendModel.get_average_score_for_type(model_type='KNN', metric='accuracy')
+    average_precision = TrendModel.get_average_score_for_type(model_type='KNN', metric='precision')
+    average_recall = TrendModel.get_average_score_for_type(model_type='KNN', metric='recall')
+    average_f1_score = TrendModel.get_average_score_for_type(model_type='KNN', metric='f1_score')
+    best_params = TrendModel.get_parameters_count_list_for_type(model_type='KNN')
+    context = {
+        'models': models,
+        'average_accuracy': average_accuracy,
+        'average_precision': average_precision,
+        'average_recall': average_recall,
+        'average_f1_score': average_f1_score,
+        'best_params': best_params,
+    }
+    return render(request, 'trending/knn-model.html', context)
 
 def search_spotify(request):
     query = request.GET.get('query', '')
@@ -180,7 +291,7 @@ def search_spotify(request):
 
     track_data = []
 
- 
+
     # Get the basic track data
     track_data = searcher.search_tracks(query)
 
