@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import TemplateView
 from django.utils import timezone
-from .models import Chart, Track, TrackFeatures, TrendModel, FeatureImportance, PopularityHistory, Playlist
+from .models import Chart, Track, TrackFeatures, TrendModel, FeatureImportance, PopularityHistory, Playlist, StarterScript
 from .visualizations import generate_top_ten_track_plot, generate_track_attribute_plot, generate_track_popularity_trend_plot
 from .spotify_search import SpotifySearch
 from datetime import timedelta
@@ -19,7 +19,6 @@ class TrackDetailView(TemplateView):
         attributes = {
             'Danceability': track.danceability,
             'Energy': track.energy,
-            'Tempo': track.tempo,
             'Valence': track.valence,
             'Speechiness': track.speechiness,
             'Acousticness': track.acousticness,
@@ -107,6 +106,7 @@ def trending_filtered(request, chart_type='spotify_playlist', chart_name=''):
 def trend_model_info(request):
     active_models = TrendModel.objects.filter(is_active=True).order_by('-created_at')
     inactive_models = TrendModel.objects.filter(is_active=False).order_by('-created_at')
+    starter_script = StarterScript.objects.filter(is_active=True)
 
     # Active Models - Features and CSV
     feature_importance_active = {}
@@ -128,6 +128,7 @@ def trend_model_info(request):
         'inactive_models': inactive_models,
         'feature_importance_active': feature_importance_active,
         'feature_importance_inactive': feature_importance_inactive,
+        'starter_script': starter_script
     }
     return render(request, 'trending/trend-model.html', context)
 
@@ -155,13 +156,16 @@ def review(request):
     # Get feature importances for the most recent model
     feature_importances = FeatureImportance.objects.filter(trend_model=recent_model).values_list('feature_name', 'importance')
 
+    starter_script = StarterScript.objects.filter(is_active=True)
+
     context = {
         'total_tracks': total_tracks,
         'spotify_playlists': spotify_playlists,
         'track': track,
         'track_feature': track_feature,
         'popularity_history': popularity_history,
-        'feature_importances' : feature_importances
+        'feature_importances' : feature_importances,
+        'starter_script': starter_script
     }
     
     return render(request, 'trending/ready-review.html', context)
@@ -173,6 +177,7 @@ def rf_model_info(request):
     average_recall = TrendModel.get_average_score_for_type(model_type='RandomForest', metric='recall')
     average_f1_score = TrendModel.get_average_score_for_type(model_type='RandomForest', metric='f1_score')
     best_params = TrendModel.get_parameters_count_list_for_type(model_type='RandomForest')
+    starter_script = StarterScript.objects.filter(is_active=True)
     context = {
         'models': models,
         'average_accuracy': average_accuracy,
@@ -180,6 +185,7 @@ def rf_model_info(request):
         'average_recall': average_recall,
         'average_f1_score': average_f1_score,
         'best_params': best_params,
+        'starter_script': starter_script
     }
     return render(request, 'trending/rf-model.html', context)
 
@@ -190,6 +196,7 @@ def hgb_model_info(request):
     average_recall = TrendModel.get_average_score_for_type(model_type='HistGradientBoosting', metric='recall')
     average_f1_score = TrendModel.get_average_score_for_type(model_type='HistGradientBoosting', metric='f1_score')
     best_params = TrendModel.get_parameters_count_list_for_type(model_type='HistGradientBoosting')
+    starter_script = StarterScript.objects.filter(is_active=True)
     context = {
         'models': models,
         'average_accuracy': average_accuracy,
@@ -197,6 +204,7 @@ def hgb_model_info(request):
         'average_recall': average_recall,
         'average_f1_score': average_f1_score,
         'best_params': best_params,
+        'starter_script': starter_script
     }
     return render(request, 'trending/hgb-model.html', context)
 
@@ -207,6 +215,7 @@ def lr_model_info(request):
     average_recall = TrendModel.get_average_score_for_type(model_type='LogisticRegression', metric='recall')
     average_f1_score = TrendModel.get_average_score_for_type(model_type='LogisticRegression', metric='f1_score')
     best_params = TrendModel.get_parameters_count_list_for_type(model_type='LogisticRegression')
+    starter_script = StarterScript.objects.filter(is_active=True)
     context = {
         'models': models,
         'average_accuracy': average_accuracy,
@@ -214,6 +223,7 @@ def lr_model_info(request):
         'average_recall': average_recall,
         'average_f1_score': average_f1_score,
         'best_params': best_params,
+        'starter_script': starter_script
     }
     return render(request, 'trending/lr-model.html', context)
 
@@ -224,6 +234,7 @@ def svm_model_info(request):
     average_recall = TrendModel.get_average_score_for_type(model_type='SVM', metric='recall')
     average_f1_score = TrendModel.get_average_score_for_type(model_type='SVM', metric='f1_score')
     best_params = TrendModel.get_parameters_count_list_for_type(model_type='SVM')
+    starter_script = StarterScript.objects.filter(is_active=True)
     context = {
         'models': models,
         'average_accuracy': average_accuracy,
@@ -231,6 +242,7 @@ def svm_model_info(request):
         'average_recall': average_recall,
         'average_f1_score': average_f1_score,
         'best_params': best_params,
+        'starter_script': starter_script
     }
     return render(request, 'trending/svm-model.html', context)
 
@@ -241,6 +253,7 @@ def lda_model_info(request):
     average_recall = TrendModel.get_average_score_for_type(model_type='LDA', metric='recall')
     average_f1_score = TrendModel.get_average_score_for_type(model_type='LDA', metric='f1_score')
     best_params = TrendModel.get_parameters_count_list_for_type(model_type='LDA')
+    starter_script = StarterScript.objects.filter(is_active=True)
     context = {
         'models': models,
         'average_accuracy': average_accuracy,
@@ -248,6 +261,7 @@ def lda_model_info(request):
         'average_recall': average_recall,
         'average_f1_score': average_f1_score,
         'best_params': best_params,
+        'starter_script': starter_script
     }
     return render(request, 'trending/lda-model.html', context)
 
@@ -258,6 +272,7 @@ def extra_model_info(request):
     average_recall = TrendModel.get_average_score_for_type(model_type='ExtraTrees', metric='recall')
     average_f1_score = TrendModel.get_average_score_for_type(model_type='ExtraTrees', metric='f1_score')
     best_params = TrendModel.get_parameters_count_list_for_type(model_type='ExtraTrees')
+    starter_script = StarterScript.objects.filter(is_active=True)
     context = {
         'models': models,
         'average_accuracy': average_accuracy,
@@ -265,6 +280,7 @@ def extra_model_info(request):
         'average_recall': average_recall,
         'average_f1_score': average_f1_score,
         'best_params': best_params,
+        'starter_script': starter_script
     }
     return render(request, 'trending/extra-model.html', context)
 
@@ -275,6 +291,7 @@ def knn_model_info(request):
     average_recall = TrendModel.get_average_score_for_type(model_type='KNN', metric='recall')
     average_f1_score = TrendModel.get_average_score_for_type(model_type='KNN', metric='f1_score')
     best_params = TrendModel.get_parameters_count_list_for_type(model_type='KNN')
+    starter_script = StarterScript.objects.filter(is_active=True)
     context = {
         'models': models,
         'average_accuracy': average_accuracy,
@@ -282,22 +299,113 @@ def knn_model_info(request):
         'average_recall': average_recall,
         'average_f1_score': average_f1_score,
         'best_params': best_params,
+        'starter_script': starter_script
     }
     return render(request, 'trending/knn-model.html', context)
 
 def search_spotify(request):
     query = request.GET.get('query', '')
     searcher = SpotifySearch()
-
+    query_data = []
     track_data = []
 
-
     # Get the basic track data
-    track_data = searcher.search_tracks(query)
+    query_data = searcher.search_tracks(query)
+    for track in query_data:
+        sp_id = track['id']
+        db_track = Track.objects.filter(spotify_id=sp_id).first()
+        spotify_url = track['external_urls']['spotify']
+        # Initialize default values for features
+        track_info = {
+            'name': track['name'],
+            'artist': track['artists'][0]['name'],
+            'album': track['album']['name'],
+            'spotify_url':spotify_url,
+            'current_popularity': track.get('popularity', 0),
+            'valence': 0.0,
+            'tempo': 0,
+            'speechiness': 0.0,
+            'danceability': 0.0,
+            'liveness': 0.0,
+            'velocity': None,
+            'median_popularity': None,
+            'mean_popularity': None,
+            'std_popularity': None,
+            'retrieval_frequency': None,
+            'rf_predicted_trend': None,
+            'hgb_predicted_trend': None,
+            'lr_predicted_trend': None,
+            'svm_predicted_trend': None,
+            'extra_predicted_trend': None,
+            'lda_predicted_trend': None,
+            'knn_predicted_trend': None,
+            'predicted_trend': None,
+        }
 
+        if db_track:
+            db_track_features = TrackFeatures.objects.filter(track=db_track).first()
+            if db_track_features:
+                track_info.update({
+                    'valence': db_track.valence,
+                    'tempo': db_track.tempo,
+                    'speechiness': db_track.speechiness,
+                    'danceability': db_track.danceability,
+                    'liveness': db_track.liveness,
+                    'velocity': db_track_features.velocity,
+                    'median_popularity': db_track_features.median_popularity,
+                    'mean_popularity': db_track_features.mean_popularity,
+                    'std_popularity': db_track_features.std_popularity,
+                    'retrieval_frequency': db_track_features.retrieval_frequency,
+                    'rf_predicted_trend': db_track_features.rf_prediction,
+                    'hgb_predicted_trend': db_track_features.hgb_prediction,
+                    'lr_predicted_trend': db_track_features.lr_prediction,
+                    'svm_predicted_trend': db_track_features.svm_prediction,
+                    'extra_predicted_trend': db_track_features.extra_prediction,
+                    'lda_predicted_trend': db_track_features.lda_prediction,
+                    'knn_predicted_trend': db_track_features.knn_prediction,
+                    'predicted_trend': db_track_features.predicted_trend,
+                })
+        else:
+            # Fetch audio features for the track
+            audio_features = searcher.get_audio_features(sp_id)
+            if audio_features:
+                track_info.update({
+                    'valence': audio_features.get('valence', 0.0),
+                    'tempo': audio_features.get('tempo', 0),
+                    'speechiness': audio_features.get('speechiness', 0.0),
+                    'danceability': audio_features.get('danceability', 0.0),
+                    'liveness': audio_features.get('liveness', 0.0),
+                })
+
+                data = {
+                    'track__valence': track_info['valence'],
+                    'track__tempo': track_info['tempo'],
+                    'track__speechiness': track_info['speechiness'],
+                    'track__danceability': track_info['danceability'],
+                    'track__liveness': track_info['liveness'],
+                    'velocity': 0.0,
+                    'current_popularity': track_info['current_popularity'],
+                    'median_popularity': 0,
+                    'mean_popularity': 0,
+                    'std_popularity': 0,
+                    'retrieval_frequency': 0 
+                }
+                
+                # Make predictions
+                track_info['rf_predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("RandomForest", data)
+                track_info['hgb_predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("HistGradientBoosting", data)
+                track_info['lr_predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("LogisticRegression", data)
+                track_info['svm_predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("SVM", data)
+                track_info['extra_predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("ExtraTrees", data)
+                track_info['lda_predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("LDA", data)
+                track_info['knn_predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("KNN", data)
+                track_info['predicted_trend'] = TrackFeatures.make_active_prediction_no_pop_history("KNN", data)
+
+        # Append track info to track_data
+        track_data.append(track_info)     
 
     context = {
-        'track_data': track_data,
+        'track_data': track_data,  # Updated to use the processed track_data
         'query': query,
     }
 

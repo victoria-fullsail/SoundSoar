@@ -6,7 +6,7 @@ class SpotifySearch:
     def __init__(self):
         self.sp = get_spotify_client()
 
-    def search_tracks(self, query, limit=7):
+    def search_tracks(self, query, limit=3):
         results = self.sp.search(q=query, type='track', limit=limit)
         return results['tracks']['items']
     
@@ -24,26 +24,11 @@ class SpotifySearch:
         # Fetch audio features for the specified track ID
         audio_features = self.sp.audio_features([track_id])
     
-        time.sleep(1)
-
         # Check if audio_features returned any data
         if audio_features and isinstance(audio_features, list) and len(audio_features) > 0:
             return audio_features[0]  # Return the first track's features
         else:
             return None
-
-
-    def search_albums(self, query, limit=5):
-        results = self.sp.search(q=query, type='album', limit=limit)
-        return results['albums']['items']
-
-    def search_artists(self, query, limit=5):
-        results = self.sp.search(q=query, type='artist', limit=limit)
-        return results['artists']['items']
-
-    def search_playlists(self, query, limit=5):
-        results = self.sp.search(q=query, type='playlist', limit=limit)
-        return results['playlists']['items']
 
 
 # Example usage
@@ -62,14 +47,3 @@ if __name__ == "__main__":
     else:
         print("No tracks found for the query.")
 
-    # Search for an album
-    #albums = spotify_search.search_albums("Brat")
-    #print("Albums found:", albums)
-
-    # Search for an artist
-    #artists = spotify_search.search_artists("Charlie")
-   # print("Artists found:", artists)
-
-    # Search for a playlist
-    #playlists = spotify_search.search_playlists("Chill Vibes")
-   # print("Playlists found:", playlists)

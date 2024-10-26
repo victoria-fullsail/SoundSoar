@@ -5,10 +5,12 @@
 <div class="container mt-5">
     <h1>Active Trend Model Information</h1>
     <br>
-    <a href="{% static 'trending/files/soundsoar_starterscript.py' %}" download>
-        <button>Download Starter Script</button>
-    </a>
-    <br>
+    {% for script in starter_script %}
+        {% if script.is_active %}
+            <a href="{{ script.starter_script.url }}" class="btn btn-primary" download target="_blank">Download Starter Script</a>
+        {% endif %}
+    {% endfor %}
+    <br><br>
     {% if active_models %}
     <div id="accordionActive">
         {% for active_model in active_models %}
@@ -67,7 +69,7 @@
                                 <a href="{{ active_model.model_file.url }}" class="btn btn-primary" download>Download Model File (pkl)</a>
                             {% endif %}
                             {% if active_model.readme_file %}
-                                <a href="{{ active_model.readme_file.url }}" class="btn btn-primary" download>Download README TXT</a>
+                                <a href="{{ active_model.readme_file.url }}" class="btn btn-primary" download target="_blank">Download README TXT</a>
                             {% endif %}
                         </p>
                     </div>
@@ -143,7 +145,7 @@
                                 <a href="{{ model.model_file.url }}" class="btn btn-primary" download>Download Model File (pkl)</a>
                             {% endif %}
                             {% if model.readme_file %}
-                                <a href="{{ model.readme_file.url }}" class="btn btn-primary" download>Download README TXT</a>
+                                <a href="{{ model.readme_file.url }}" class="btn btn-primary" download target="_blank">Download README TXT </a>
                             {% endif %}
                         </p>
                     </div>

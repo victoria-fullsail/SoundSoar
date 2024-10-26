@@ -17,8 +17,19 @@
                     Predicted Trend: {{ feature.predicted_trend }}
                 </span>
                 <span class="badge" style="background-color: #A5C3CF; color: #333333; font-size: 1rem;">
-                    Confidence in Model: NA
-                </span>
+                    <button class="btn" style="background-color: #b5c1c7; color: black;" data-bs-toggle="modal" data-bs-target="#trackModal" 
+                        data-rf-pred="{{ feature.rf_prediction }}" 
+                        data-hgb-pred="{{ feature.hgb_prediction}}" 
+                        data-lr-pred="{{ feature.lr_prediction }}"
+                        data-svm-pred="{{ feature.svm_prediction }}" 
+                        data-lda-pred="{{ feature.lda_prediction }}" 
+                        data-extra-pred="{{ feature.extra_prediction }}" 
+                        data-knn-pred="{{ feature.knn_prediction }}" 
+                        data-overall-pred="{{ feature.predicted_trend }}"
+                        >
+                        Trend Model Prediction Breakdown
+                    </button>   
+                </span>   
             </div>
         </div>
     </div>
@@ -32,6 +43,7 @@
                     <p class="card-text">Artist: {{ track.artist }}</p>
                     <p class="card-text">Album: {{ track.album }}</p>
                     <a href="{{ track.spotify_url }}" class="btn" style="color: white; background-color: #1DB954;" target="_blank">Listen on Spotify</a>
+                    <p class="card-text">Tempo (BPM): {{ track.tempo }}</p>
                 </div>
             </div>
         </div>
@@ -65,7 +77,58 @@
         </div>
     </div>
 </div>
+<!-- Trend Model Details Modal -->
+<div class="modal fade" id="trackModal" tabindex="-1" aria-labelledby="trackModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="margin: auto; padding-top: 20px; padding-bottom: 20px;">
+        <div class="modal-content" style="border-radius: 15px; border: 2px solid #333; background-color: #ffffff;">
+            <div class="modal-header" style="background-color: #0077b6;">
+                <h5 class="modal-title text-white" id="trackModalLabel">Trend Model Prediction Breakdown</h5>
+                <button type="button" data-bs-dismiss="modal" aria-label="Close" style="background: none; border: none; padding: 0;">
+                    <i class="fas fa-times" style="color: black; font-size: 20px;"></i>
+                </button>                 
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+
+                <p style="margin-bottom: 10px;"><strong>Predicted Trend:</strong> <span id="modalOverallPrediction"></span></p>
+                <ul>
+                    <li>RandomForest Prediction: <span id="modalRFPrediction"></span></li>
+                    <li>HistGradientBoosting Prediction: <span id="modalHGBPrediction"></span></li>
+                    <li>LogisticRegression Prediction: <span id="modalLRPrediction"></span></li>
+                    <li>SVM Prediction: <span id="modalSVMPrediction"></span></li>
+                    <li>LDA Prediction: <span id="modalLDAPrediction"></span></li>
+                    <li>ExtraTrees Prediction: <span id="modalExtraPrediction"></span></li>
+                    <li>KNN Prediction: <span id="modalKNNPrediction"></span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    // JavaScript to handle modal population
+    $('#trackModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var rf_prediction = button.data('rf-pred');
+        var hgb_prediction = button.data('hgb-pred');
+        var lr_prediction = button.data('lr-pred');
+        var svm_prediction = button.data('svm-pred');
+        var extra_prediction = button.data('extra-pred');
+        var lda_prediction = button.data('lda-pred');
+        var knn_prediction = button.data('knn-pred');
+        var overall_prediction = button.data('overall-pred');
+
+        // Update the modal's content
+        var modal = $(this);
+        modal.find('#modalRFPrediction').text(rf_prediction);
+        modal.find('#modalHGBPrediction').text(hgb_prediction);
+        modal.find('#modalLRPrediction').text(lr_prediction);
+        modal.find('#modalSVMPrediction').text(svm_prediction);
+        modal.find('#modalExtraPrediction').text(extra_prediction);
+        modal.find('#modalLDAPrediction').text(lda_prediction);
+        modal.find('#modalKNNPrediction').text(knn_prediction);
+        modal.find('#modalOverallPrediction').text(overall_prediction);
+    });
+</script>
 {% endblock content %}

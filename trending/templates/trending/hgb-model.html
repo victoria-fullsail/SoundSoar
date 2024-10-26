@@ -3,12 +3,17 @@
 {% load my_filters %}
 {% block content %}
 <div class="container mt-5">
+    <!-- Starter Script -->
+    {% for script in starter_script %}
+        {% if script.is_active %}
+            <a href="{{ script.starter_script.url }}" class="btn btn-primary" download target="_blank">Download Starter Script</a>
+        {% endif %}
+    {% endfor %}
     <!-- Model Analysis -->
     <div class="mb-4">
         <h2>What is HGB?</h2>
         <p>HistGradientBoosting is a gradient boosting technique that uses histogram-based optimization to efficiently train models on large datasets. It builds models sequentially, with each new model correcting errors made by the previous ones. This method enhances performance while reducing training time and memory usage. HistGradientBoosting is particularly effective in capturing complex data patterns and is often used in scenarios requiring high predictive accuracy.</p>
     </div>
-
     <!-- Average Scores Section -->
     <div class="mb-4">
         <h2>Most Frequent Parameters</h2>
@@ -33,10 +38,6 @@
 <!-- Model History -->
 <div class="container mt-5">
     <h2>HGB Model History</h2>
-    <br>
-    <a href="{% static 'trending/files/soundsoar_starterscript.py' %}" download>
-        <button>Download Starter Script</button>
-    </a>
     <br>
     {% if models %}
     <div id="accordionInactive">

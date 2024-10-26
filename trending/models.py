@@ -111,6 +111,54 @@ class TrackFeatures(models.Model):
 
     predicted_trend = models.CharField(max_length=10, blank=True, null=True, choices=[('up', 'Up'), ('down', 'Down'), ('stable', 'Stable')])
 
+    @staticmethod
+    def make_active_prediction_no_pop_history(model_type, data):
+        """
+        Predict the trend using the specified model type and input data, with default values for popularity metrics.
+
+        :param model_type: The type of model to use for prediction (e.g., 'RandomForest', 'LogisticRegression', etc.)
+        :param data: The input features for the prediction.
+        :return: The predicted trend for the input data or None if an error occurs.
+        """
+        # Load the model based on the specified model_type
+        try:
+            model_instance = TrendModel.objects.get(model_type=model_type, is_active=True)
+            model, feature_names, imputer = load_active_model(model_instance)
+        except TrendModel.DoesNotExist:
+            print(f"Error: No active model found for type '{model_type}'.")
+            return None
+        except Exception as e:
+            print(f"An error occurred while fetching the model '{model_type}': {e}")
+            return None
+
+        # Prepare the input features
+        features_df = pd.DataFrame([data])
+        print('features_df: ', features_df)
+
+        # Apply the imputer loaded with the model
+        features_imputed = pd.DataFrame(imputer.transform(features_df), columns=features_df.columns)
+        print('features_imputed: ', features_imputed)
+
+        # Initialize prediction variable
+        prediction = None
+
+        # Scale features for certain models
+        if model_type in ['LogisticRegression', 'SVM']:
+            scaler = StandardScaler()
+            features_scaled = pd.DataFrame(scaler.fit_transform(features_imputed), columns=features_imputed.columns)
+            features_for_model = features_scaled[feature_names]
+        else:
+            features_for_model = features_imputed[feature_names]
+
+        # Make the prediction
+        prediction = model.predict(features_for_model.values)[0]
+
+        # Map prediction
+        prediction_str = TrackFeatures.map_prediction(prediction)
+
+
+        return prediction_str
+
     def __str__(self):
         return f"Features for {self.track.name}"
 
@@ -261,6 +309,7 @@ class TrackFeatures(models.Model):
         }
 
         predictions = {}
+        accuracies = {}
 
         # Iterate over the models and make predictions
         for model_name, model_instance in active_models.items():
@@ -277,7 +326,8 @@ class TrackFeatures(models.Model):
                     features_for_model = features_imputed[feature_names]
 
                 # Make the prediction
-                predictions[model_name] = self.map_prediction(model.predict(features_for_model.values)[0])
+                predictions[model_name] = TrackFeatures.map_prediction(model.predict(features_for_model.values)[0])
+                accuracies[model_name] = model_instance.accuracy  # Access accuracy from the model instance
 
             except Exception as e:
                 print(f"An error occurred while predicting with {model_name}: {e}")
@@ -292,14 +342,25 @@ class TrackFeatures(models.Model):
         self.extra_prediction = predictions['et']
         self.knn_prediction = predictions['knn']
 
+        # Determine the most common prediction and handle ties
+        prediction_values = list(predictions.values())
+        most_common_prediction = max(set(prediction_values), key=prediction_values.count)
 
-        # Determine the most common prediction
-        most_common_prediction = max(set(predictions.values()), key=list(predictions.values()).count)
-        self.predicted_trend = most_common_prediction
+        # Check for ties
+        tied_models = [model for model, prediction in predictions.items() if prediction == most_common_prediction]
+        
+        if len(tied_models) > 1:
+            # There is a tie, choose the model with the highest accuracy
+            best_model = max(tied_models, key=lambda m: accuracies[m])
+            self.predicted_trend = predictions[best_model]
+        else:
+            # No tie, assign the common prediction
+            self.predicted_trend = most_common_prediction
 
         self.save()
 
-    def map_prediction(self, prediction):
+    @staticmethod
+    def map_prediction(prediction):
         """
         Map numeric predictions to string labels.
         """
@@ -343,6 +404,7 @@ class TrackFeatures(models.Model):
 
         # Create a list of tuples (timestamp, popularity)
         return [(entry.timestamp, entry.popularity) for entry in historical_data]
+
 
 class TrendModel(models.Model):
     version_number = models.CharField(max_length=25, unique=True, blank=True)
@@ -511,3 +573,8 @@ class PredictionHistory(models.Model):
 
     def __str__(self):
         return f"Prediction for {self.song.name}: {self.predicted_trend} (Actual: {self.actual_trend if self.actual_trend else 'Pending'})"
+
+class StarterScript(models.Model):
+    name = models.CharField(max_length=25)
+    starter_script = models.FileField(upload_to='trending/trend_model/starter_script/', null=True, blank=True)
+    is_active = models.BooleanField(default=False)

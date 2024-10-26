@@ -3,12 +3,17 @@
 {% load my_filters %}
 {% block content %}
 <div class="container mt-5">
+    <!-- Starter Script -->
+    {% for script in starter_script %}
+        {% if script.is_active %}
+            <a href="{{ script.starter_script.url }}" class="btn btn-primary" download target="_blank">Download Starter Script</a>
+        {% endif %}
+    {% endfor %}
     <!-- Model Analysis -->
     <div class="mb-4">
         <h2>What is KNN?</h2>
-        <p>insert text here</p>
+        <p>K-Nearest Neighbors (KNN) is a simple, non-parametric, and supervised machine learning algorithm used for classification and regression tasks. The algorithm operates on the principle that similar data points are located close to each other in the feature space. To classify a new data point, KNN identifies the 'K' nearest neighbors based on a distance metric, typically Euclidean distance, and assigns the class that is most common among those neighbors. The value of 'K' is a crucial hyperparameter that can significantly affect the model's performance; a smaller 'K' can lead to overfitting, while a larger 'K' may smooth out class boundaries. KNN is particularly useful in scenarios where the decision boundary is not linear and when the dataset is relatively small and easy to manage.</p>
     </div>
-
     <!-- Average Scores Section -->
     <div class="mb-4">
         <h2>Most Frequent Parameters</h2>
@@ -33,10 +38,6 @@
 <!-- Model History -->
 <div class="container mt-5">
     <h2>KNN Model History</h2>
-    <br>
-    <a href="{% static 'trending/files/soundsoar_starterscript.py' %}" download>
-        <button>Download Starter Script</button>
-    </a>
     <br>
     {% if models %}
     <div id="accordionInactive">

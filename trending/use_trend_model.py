@@ -1,14 +1,14 @@
 import joblib
-import os 
+import os
 
 def load_active_model(active_model):
     """
     Load the active model from disk based on the active version in the TrendModel table.
     
-    :return: Loaded model, feature names
+    :return: Loaded model, feature names, and imputer
     :raises RuntimeError: If no active model is found
     """
-    print('enter load active model')
+    print('Entering load_active_model')
 
     if not active_model:
         raise RuntimeError("No active model found in the database.")
@@ -27,6 +27,5 @@ def load_active_model(active_model):
     # Load the model
     model, feature_names, imputer = joblib.load(model_file_path)
 
-    print('exiting load active model')
+    print('Exiting load_active_model')
     return model, feature_names, imputer
-

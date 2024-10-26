@@ -28,11 +28,11 @@
                 </div>
                 <!-- Account Icon and Modal Trigger -->
                 <div class="item-container">
-                    <div class="item-icon">
-                        <a href="{% url 'userpref:preferences' %}">
-                            <i class="fa-solid fa-user"></i>
-                        </a>
-                    </div>
+                    <!--<div class="item-icon"> -->
+                    <!--    <a href="{% url 'userpref:preferences' %}"> -->
+                    <!--        <i class="fa-solid fa-user"></i> -->
+                    <!--    </a>-->
+                    <!--</div>-->
                     <div class="mobile-toggler">
                         <a href="#" data-bs-toggle="modal" data-bs-target="#navbModal">
                             <i class="fa-solid fa-bars"></i>
@@ -69,10 +69,10 @@
                                     <i class="fa-solid fa-lightbulb"></i>
                                     <a href="https://soundsoar.com/trending/filtered/custom/SoundSoar%20Suggestions/">Suggested Songs</a>
                                 </div>
-                                <div class="modal-line">
-                                    <i class="fa-solid fa-user"></i>
-                                    <a href="{% url 'userpref:preferences' %}">Account Settings</a>
-                                </div>
+                                <!--<div class="modal-line"> -->
+                                <!--    <i class="fa-solid fa-user"></i> -->
+                                <!--    <a href="{% url 'userpref:preferences' %}">Account Settings</a> -->
+                                <!--</div> -->
                                 <br>
                                 <div class="modal-line">
                                     <i class="fa-solid fa-database"></i>
@@ -84,21 +84,21 @@
                                 </div>
                                 <br><br><br>
                                 <!-- LOGOUT BUTTON -->
-                                    {% if user.is_authenticated %}
+                                    <!--{% if user.is_authenticated %} -->
                                     <!-- Sign-out button for logged-in users -->
-                                    <li>
-                                        <a href="{% url 'core:custom_logout' %}" style="background-color: #0077b6; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.3s ease;">
-                                            Sign Out
-                                        </a>
-                                    </li>
-                                    {% else %}
+                                    <!--<li> -->
+                                     <!--   <a href="{% url 'core:custom_logout' %}" style="background-color: #0077b6; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.3s ease;">-->
+                                      <!--      Sign Out-->
+                                      <!--  </a>-->
+                                   <!-- </li>-->
+                                   <!-- {% else %}-->
                                     <!-- Sign-in button for guests -->
-                                    <li>
-                                        <a href="{% url 'trending:trending' %}" style="background-color: #0077b6; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.3s ease;">
-                                            Sign In
-                                        </a>
-                                    </li>
-                                    {% endif %}
+                                    <!--<li>-->
+                                   <!--     <a href="{% url 'trending:trending' %}" style="background-color: #0077b6; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; transition: background-color 0.3s ease;">-->
+                                    <!--        Sign In-->
+                                   <!--     </a>-->
+                                   <!-- </li>-->
+                                   <!-- {% endif %} -->
                             </div>           
                         </div>
                     </div>

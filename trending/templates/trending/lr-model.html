@@ -3,6 +3,12 @@
 {% load my_filters %}
 {% block content %}
 <div class="container mt-5">
+    <!-- Starter Script -->
+    {% for script in starter_script %}
+        {% if script.is_active %}
+            <a href="{{ script.starter_script.url }}" class="btn btn-primary" download target="_blank">Download Starter Script</a>
+        {% endif %}
+    {% endfor %}
     <!-- Model Analysis -->
     <div class="mb-4">
         <h2>What is Logistic Regression?</h2>
@@ -33,10 +39,6 @@
 <!-- Model History -->
 <div class="container mt-5">
     <h2>Logistic Regression Model History</h2>
-    <br>
-    <a href="{% static 'trending/files/soundsoar_starterscript.py' %}" download>
-        <button>Download Starter Script</button>
-    </a>
     <br>
     {% if models %}
     <div id="accordionInactive">

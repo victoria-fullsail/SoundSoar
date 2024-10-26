@@ -34,7 +34,10 @@
                         <th data-field="track_name" data-sortable="true">Track Name</th>
                         <th data-field="artist" data-sortable="true">Artist</th>
                         <th data-field="album" data-sortable="true">Album</th>
-                        <th data-field="action" data-sortable="false">Action</th>
+                        <th data-field="predicted_trend" data-sortable="true">Predicted Trend</th>
+                        <th data-field="popularity" data-sortable="true">Popularity</th>
+                        <th data-field="sp_url" data-sortable="false">Spotify Link</th>
+                        <th data-field="action" data-sortable="false">Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,17 +45,41 @@
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>{{ track.name }}</td>
-                            <td>{{ track.artists.0.name }}</td>
-                            <td>{{ track.album.name }}</td>
+                            <td>{{ track.artist }}</td>
+                            <td>{{ track.album }}</td>
+                            <td>{{ track.predicted_trend }}</td>
+                            <td>{{ track.current_popularity }}</td>
+                            <td>
+                                <a href="{{ track.spotify_url }}" class="btn btn-success" target="_blank" style="background-color: #1DB954; border: none; color: white;">
+                                    Open Track
+                                </a>
+                            </td>
                             <td>
                                 <button class="btn" style="background-color: #b5c1c7; color: black;" data-bs-toggle="modal" data-bs-target="#trackModal" 
                                     data-name="{{ track.name }}" 
-                                    data-artist="{{ track.artists.0.name }}" 
-                                    data-album="{{ track.album.name }}" 
-                                    data-prediction="{{ track.prediction }}"
-                                    data-popularity="{{ track.popularity }}"  
-                                    data-chart="{{ track.chart_html|safe }}">  <!-- Directly pass the HTML with safe filter -->
-                                    View Details
+                                    data-artist="{{ track.artist }}" 
+                                    data-album="{{ track.album }}" 
+                                    data-popularity="{{ track.current_popularity }}"  
+                                    data-valence="{{ track.valence }}"
+                                    data-tempo="{{ track.tempo }}"
+                                    data-speechiness="{{ track.speechiness }}"
+                                    data-danceability="{{ track.danceability }}"
+                                    data-liveness="{{ track.liveness }}"
+                                    data-rf-prediction="{{ track.rf_predicted_trend }}"
+                                    data-hgb-prediction="{{ track.hgb_predicted_trend }}"
+                                    data-lr-prediction="{{ track.lr_predicted_trend }}"
+                                    data-svm-prediction="{{ track.svm_predicted_trend }}"
+                                    data-extra-prediction="{{ track.extra_predicted_trend }}"
+                                    data-lda-prediction="{{ track.lda_predicted_trend }}"
+                                    data-knn-prediction="{{ track.knn_predicted_trend }}"
+                                    data-velocity="{{ track.velocity }}"
+                                    data-median-popularity="{{ track.median_popularity }}"
+                                    data-mean-popularity="{{ track.mean_popularity }}"
+                                    data-std-popularity="{{ track.std_popularity }}"
+                                    data-retrieval-frequency="{{ track.retrieval_frequency }}"
+                                    spotify-url="{{ track.spotify_url }}"
+                                    >
+                                    View
                                 </button>                                 
                             </td>
                         </tr>
@@ -75,10 +102,37 @@
                     </button>                 
                 </div>
                 <div class="modal-body" style="padding: 20px;">
+
                     <p style="margin-bottom: 10px;"><strong>Track:</strong> <span id="modalTrackName"></span></p>
                     <p style="margin-bottom: 10px;"><strong>Album:</strong> <span id="modalAlbumName"></span></p>
                     <p style="margin-bottom: 10px;"><strong>Artist:</strong> <span id="modalArtistName"></span></p>
                     <p style="margin-bottom: 10px;"><strong>Current Popularity Score:</strong> <span id="modalPopularity"></span></p>
+                    <p style="margin-bottom: 10px;"><strong>Track Attributes:</strong></p>
+                    <ul>
+                        <li>Valence: <span id="modalValence"></span></li>
+                        <li>Tempo: <span id="modalTempo"></span></li>
+                        <li>Speechiness: <span id="modalSpeechiness"></span></li>
+                        <li>Danceability: <span id="modalDanceability"></span></li>
+                        <li>Liveness: <span id="modalLiveness"></span></li>
+                    </ul>
+                    <p style="margin-bottom: 10px;"><strong>Predicted Trends:</strong></p>
+                    <ul>
+                        <li>Random Forest: <span id="modalRFPrediction"></span></li>
+                        <li>Hist Gradient Boosting: <span id="modalHGBPrediction"></span></li>
+                        <li>Logistic Regression: <span id="modalLRPrediction"></span></li>
+                        <li>SVM: <span id="modalSVMPrediction"></span></li>
+                        <li>Extra Trees: <span id="modalExtraPrediction"></span></li>
+                        <li>LDA: <span id="modalLDAPrediction"></span></li>
+                        <li>KNN: <span id="modalKNNPrediction"></span></li>
+                    </ul>
+                    <p style="margin-bottom: 10px;"><strong>Trend Popularity History:</strong></p>
+                    <ul>
+                        <li>Velocity: <span id="modalVelocity"></span></li>
+                        <li>Median Popularity: <span id="modalMedianPopularity"></span></li>
+                        <li>Mean Popularity: <span id="modalMeanPopularity"></span></li>
+                        <li>STD Popularity: <span id="modalStdPopularity"></span></li>
+                        <li>retrieval_frequency: <span id="etrievalFrequency"></span></li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -95,25 +149,49 @@
             var name = button.data('name'); // Extract info from data-* attributes
             var artist = button.data('artist');
             var album = button.data('album');
-            var prediction = button.data('prediction');
             var popularity = button.data('popularity'); // Current popularity
-            var chartHtml = button.data('chart'); // HTML for the Plotly chart
+            var valence = button.data('valence');
+            var tempo = button.data('tempo');
+            var speechiness = button.data('speechiness');
+            var danceability = button.data('danceability');
+            var liveness = button.data('liveness');
+            var rf_prediction = button.data('rf-prediction');
+            var hgb_prediction = button.data('hgb-prediction');
+            var lr_prediction = button.data('lr-prediction');
+            var svm_prediction = button.data('svm-prediction');
+            var extra_prediction = button.data('extra-prediction');
+            var lda_prediction = button.data('lda-prediction');
+            var knn_prediction = button.data('knn-prediction');
+            var velocity = button.data('velocity');
+            var medianPopularity = button.data('median-popularity');
+            var meanPopularity = button.data('mean-popularity');
+            var stdPopularity = button.data('std-popularity');
+            var retrievalFrequency = button.data('retrieval-frequency');
 
             // Update the modal's content
             var modal = $(this);
             modal.find('#modalTrackName').text(name);
             modal.find('#modalArtistName').text(artist);
             modal.find('#modalAlbumName').text(album);
-            modal.find('#modalPrediction').text(prediction);
-            modal.find('#modalPopularity').text(popularity); // Set current popularity score
+            modal.find('#modalPopularity').text(popularity);
+            modal.find('#modalValence').text(valence);
+            modal.find('#modalTempo').text(tempo);
+            modal.find('#modalSpeechiness').text(speechiness);
+            modal.find('#modalDanceability').text(danceability);
+            modal.find('#modalLiveness').text(liveness);
+            modal.find('#modalRFPrediction').text(rf_prediction);
+            modal.find('#modalHGBPrediction').text(hgb_prediction);
+            modal.find('#modalLRPrediction').text(lr_prediction);
+            modal.find('#modalSVMPrediction').text(svm_prediction);
+            modal.find('#modalExtraPrediction').text(extra_prediction);
+            modal.find('#modalLDAPrediction').text(lda_prediction);
+            modal.find('#modalKNNPrediction').text(knn_prediction);
+            modal.find('#modalVelocity').text(velocity);
+            modal.find('#modalMedianPopularity').text(medianPopularity);
+            modal.find('#modalMeanPopularity').text(meanPopularity);
+            modal.find('#modalStdPopularity').text(stdPopularity);
+            modal.find('#modalRetrievalFrequency').text(retrievalFrequency);
 
-            // Spotify link (add actual Spotify link data to button data in future)
-            var spotifyLink = "#"; // Placeholder for now
-            modal.find('#spotifyLink').attr('href', spotifyLink);
-
-            // Inject the Plotly chart HTML into the modal
-            var chartContainer = modal.find('#chartContainer');
-            chartContainer.html(chartHtml); // Directly inject the HTML
         });
     </script>
 </div>
