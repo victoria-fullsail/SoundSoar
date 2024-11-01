@@ -83,7 +83,7 @@ def generate_track_attribute_plot(attributes):
     fig.update_layout(
         xaxis_title='Value',
         yaxis_title='Attribute',
-        xaxis=dict(range=[0, 1])  # Adjust based on the expected attribute range
+        xaxis=dict(range=[0, 1])
     )
 
     # Return the figure object

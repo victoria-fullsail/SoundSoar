@@ -2,7 +2,6 @@ import pandas as pd
 import os
 import sys
 import django
-from django.core.exceptions import ObjectDoesNotExist
 import numpy as np
 
 # Set up the project base directory and Django settings module

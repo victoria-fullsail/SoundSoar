@@ -31,7 +31,6 @@ def save_model(model, feature_names, imputer, file_path):
     except Exception as e:
         print(f"Error saving model: {e}")
 
-
 def get_feature_importance(model, X_train, y_train):
     """Calculate feature importance for the given model."""
 

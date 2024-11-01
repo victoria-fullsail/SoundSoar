@@ -1,6 +1,5 @@
 # spotify_search.py
 from .spotify_api import get_spotify_client
-import time
 
 class SpotifySearch:
     def __init__(self):

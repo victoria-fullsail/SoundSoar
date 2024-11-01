@@ -35,10 +35,9 @@ def sync_playlist_tracks_task():
         except Exception as e:
             logger.error(f'Error processing playlist {playlist.playlist_id}: {e}')
 
-
 def high_freq_sync_track_data_task():
     """High-frequency sync for certain tracks every 6 hours"""
-    # Fetch high-frequency track features from the database
+
     high_freq_tracks = TrackFeatures.objects.filter(retrieval_frequency='high')
 
     for track_features in high_freq_tracks:
@@ -57,7 +56,6 @@ def high_freq_sync_track_data_task():
         insert_popularity_history(track)
 
     logger.info("High-frequency track data synchronization completed.")
-
 
 def medium_freq_sync_track_data_task():
     """Medium-frequency sync for certain tracks every 12 hours"""
@@ -83,6 +81,9 @@ def medium_freq_sync_track_data_task():
     logger.info("Medium-frequency track data synchronization completed.")
 
 def update_trend_models():
+    """
+    Updates all active models by calling the function from update_trend_model.
+    """
     # Update model
     update_active_models()
 
@@ -100,7 +101,6 @@ def update_all_track_features_predictions():
             feature.predict_and_update_trend()  # Run the prediction and update         
         except Exception as e:
             print(f"Error updating trend for {feature.track.name}: {e}")
-
 
 def update_custom_playlist():
     try:

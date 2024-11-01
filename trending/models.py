@@ -1,14 +1,13 @@
 from django.db import models
+from django.db import transaction
 from django.utils import timezone
 from datetime import timedelta
-import numpy as np
-import pandas as pd
-from .use_trend_model import load_active_model 
+from collections import Counter
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
-from django.db import transaction
-from collections import Counter
+from .use_trend_model import load_active_model 
+
 
 class Chart(models.Model):
     CHART_TYPE_CHOICES = [
@@ -404,7 +403,6 @@ class TrackFeatures(models.Model):
 
         # Create a list of tuples (timestamp, popularity)
         return [(entry.timestamp, entry.popularity) for entry in historical_data]
-
 
 class TrendModel(models.Model):
     version_number = models.CharField(max_length=25, unique=True, blank=True)
