@@ -16,8 +16,8 @@
                 <span class="badge" style="background-color: #C7E2D9; color: #333333; font-size: 1rem;">
                     Predicted Trend: {{ feature.predicted_trend }}
                 </span>
-                <span class="badge" style="background-color: #A5C3CF; color: #333333; font-size: 1rem;">
-                    <button class="btn" style="background-color: #b5c1c7; color: black;" data-bs-toggle="modal" data-bs-target="#trackModal" 
+                <span class="badge" style="background-color: #F9E79F; color: #333333; font-size: 1rem;">
+                    <button class="btn" style="background-color: #F9E79F; color: #333333; width: auto; font-size: 1rem; " data-bs-toggle="modal" data-bs-target="#trackModal" 
                         data-rf-pred="{{ feature.rf_prediction }}" 
                         data-hgb-pred="{{ feature.hgb_prediction}}" 
                         data-lr-pred="{{ feature.lr_prediction }}"
@@ -25,11 +25,11 @@
                         data-lda-pred="{{ feature.lda_prediction }}" 
                         data-extra-pred="{{ feature.extra_prediction }}" 
                         data-knn-pred="{{ feature.knn_prediction }}" 
-                        data-overall-pred="{{ feature.predicted_trend }}"
-                        >
+                        data-overall-pred="{{ feature.predicted_trend }}" 
+                    >
                         Trend Model Prediction Breakdown
                     </button>   
-                </span>   
+                </span>                   
             </div>
         </div>
     </div>
@@ -39,11 +39,15 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">{{ track.name }}</h5>
+                    <h5 class="card-title">Track Details</h5>
+                    <br>
+                    <p class="card-text">Track Name: {{ track.name }}</p>
                     <p class="card-text">Artist: {{ track.artist }}</p>
                     <p class="card-text">Album: {{ track.album }}</p>
-                    <a href="{{ track.spotify_url }}" class="btn" style="color: white; background-color: #1DB954;" target="_blank">Listen on Spotify</a>
                     <p class="card-text">Tempo (BPM): {{ track.tempo }}</p>
+                    <br>
+                    <a href="{{ track.spotify_url }}" class="btn" style="color: white; background-color: #1DB954;" target="_blank">Listen on Spotify</a>
+                    <a href="https://developer.spotify.com/documentation/web-api/reference/get-audio-features" class="btn btn-outline-secondary" style="margin-top: 5px; font-size: 0.9rem;">ℹ️ Attribute Info</a>               
                 </div>
             </div>
         </div>
@@ -61,6 +65,7 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Popularity Analysis</h5>
+                    <br>
                     <p class="card-text">Velocity: {{ feature.velocity }}</p>
                     <p class="card-text">Current Popularity: {{ feature.current_popularity }}</p>
                     <p class="card-text">Median Popularity: {{ feature.median_popularity }}</p>
