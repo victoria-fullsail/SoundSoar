@@ -1,0 +1,41 @@
+# Model Version: v147.0
+
+## Model Type: HistGradientBoosting
+
+## Best Parameters
+```
+early_stopping: True, l2_regularization: 0.1, learning_rate: 0.1, max_bins: 255, max_depth: None, max_iter: 100, min_samples_leaf: 1
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.9597701149425287
+- **Precision**: 0.9615638040852186
+- **Recall**: 0.9597701149425287
+- **F1 Score**: 0.9566983841722693
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[  9,   3,   0],
+ [  0, 150,   0],
+ [  0,   4,   8]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__energy
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

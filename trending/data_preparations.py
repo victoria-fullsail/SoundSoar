@@ -26,7 +26,7 @@ def load_data(model_name, include_target=True):
 
     elif model_name == 'TrackFeatures':
         queryset = TrackFeatures.objects.select_related('track').all().values(
-            'track__valence', 'track__tempo', 'track__speechiness', 
+            'track__energy', 'track__valence', 'track__tempo', 'track__speechiness', 
             'track__danceability', 'track__liveness', 'velocity', 
             'median_popularity', 'mean_popularity', 'std_popularity', 
             'trend', 'retrieval_frequency', 'current_popularity'

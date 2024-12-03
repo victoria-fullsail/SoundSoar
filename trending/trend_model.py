@@ -8,6 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.impute import SimpleImputer
@@ -37,16 +38,13 @@ def get_feature_importance(model, X_train, y_train):
     if hasattr(model, 'feature_importances_'):
         return model.feature_importances_
     
-    elif hasattr(model, 'coef_'):
+    elif hasattr(model, 'coef_') or isinstance(model, LinearDiscriminantAnalysis):
         return np.abs(model.coef_[0])
     
-    elif isinstance(model, (HistGradientBoostingClassifier, SVC, KNeighborsClassifier)):
+    elif isinstance(model, (HistGradientBoostingClassifier, SVC, KNeighborsClassifier, MLPClassifier)):
         # Use permutation importance for applicable models
         perm_importance = permutation_importance(model, X_train, y_train, n_repeats=10, random_state=42)
         return perm_importance.importances_mean
-    
-    elif isinstance(model, LinearDiscriminantAnalysis):
-        return np.abs(model.coef_[0])
     
     else:
         print("Model does not support feature importance.")
@@ -80,7 +78,9 @@ def train_and_evaluate_models():
         'SVM': SVC(random_state=42),
         'LDA': LinearDiscriminantAnalysis(),
         'ExtraTrees': ExtraTreesClassifier(random_state=42, class_weight='balanced'),
-        'KNN': KNeighborsClassifier()   
+        'KNN': KNeighborsClassifier(),
+        'MLPClassifier': MLPClassifier(random_state=42, max_iter=1000)
+ 
     }
 
     # Define the parameter grids for each model
@@ -131,6 +131,13 @@ def train_and_evaluate_models():
             'algorithm': ['auto'],
             'leaf_size': [5, 10, 20],
             'metric': ['euclidean', 'manhattan']
+        },
+        'MLPClassifier': {
+            'hidden_layer_sizes': [(50,), (100,), (100, 50)],
+            'activation': ['relu', 'tanh'],
+            'solver': ['adam', 'sgd'],
+            'alpha': [0.0001, 0.001],
+            'learning_rate': ['constant', 'adaptive']
         }
     }
 
@@ -145,8 +152,8 @@ def train_and_evaluate_models():
     for name, model in models.items():
         print(f"Training {name}...")
 
-        # Check if the model needs scaling (LogisticRegression, SVM, KNN)
-        if name in ['LogisticRegression', 'SVM', 'KNN']:
+        # Check if the model needs scaling (LogisticRegression, SVM, KNN, MLPClassifier)
+        if name in ['LogisticRegression', 'SVM', 'KNN', 'MLPClassifier']:
             X_train_scaled = scaler.fit_transform(X_train)
             X_test_scaled = scaler.transform(X_test)
         else:

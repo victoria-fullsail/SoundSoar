@@ -1,4 +1,4 @@
-from trend_model import train_and_evaluate_models, save_model
+from trend_model_improved import train_and_evaluate_models, save_model
 from trending.models import TrendModel, FeatureImportance
 from django.core.files import File
 

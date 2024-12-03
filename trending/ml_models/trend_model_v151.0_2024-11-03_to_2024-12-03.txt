@@ -1,0 +1,41 @@
+# Model Version: v151.0
+
+## Model Type: ExtraTrees
+
+## Best Parameters
+```
+bootstrap: True, criterion: entropy, max_features: sqrt, min_samples_leaf: 1, n_estimators: 100
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.9540229885057471
+- **Precision**: 0.9563509384548232
+- **Recall**: 0.9540229885057471
+- **F1 Score**: 0.9496075612228061
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[  7,   5,   0],
+ [  0, 150,   0],
+ [  0,   3,   9]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__energy
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

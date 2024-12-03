@@ -1,0 +1,40 @@
+# Model Version: v130.0
+
+## Model Type: RandomForest
+
+## Best Parameters
+```
+bootstrap: True, criterion: gini, max_depth: None, max_features: sqrt, min_samples_leaf: 1, n_estimators: 200
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.9709302325581395
+- **Precision**: 0.971833020366893
+- **Recall**: 0.9709302325581395
+- **F1 Score**: 0.9684463111045901
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[  5,   2,   0],
+ [  0, 156,   0],
+ [  0,   3,   6]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.

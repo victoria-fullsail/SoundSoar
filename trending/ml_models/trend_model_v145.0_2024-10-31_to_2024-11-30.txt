@@ -1,0 +1,40 @@
+# Model Version: v145.0
+
+## Model Type: MLPClassifier
+
+## Best Parameters
+```
+activation: tanh, alpha: 0.0001, hidden_layer_sizes: (100,), learning_rate: adaptive, solver: sgd
+```
+
+## Model Performance Metrics
+- **Accuracy**: 0.9310344827586207
+- **Precision**: 0.9308805418719212
+- **Recall**: 0.9310344827586207
+- **F1 Score**: 0.9230724196475615
+- **ROC AUC**: None
+
+## Confusion Matrix
+```
+[[  6,   6,   0],
+ [  1, 149,   0],
+ [  0,   5,   7]]
+```
+
+## Feature List
+The following features were used in training the model:
+```
+track__valence
+track__tempo
+track__speechiness
+track__danceability
+track__liveness
+velocity
+current_popularity
+median_popularity
+mean_popularity
+std_popularity
+retrieval_frequency```
+
+## How to Use
+- Load the model and use the feature data to make predictions on target trend.
